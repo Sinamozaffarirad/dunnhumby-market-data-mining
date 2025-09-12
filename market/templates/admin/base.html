@@ -1,0 +1,174 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Chart.js for Data Visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom Market Analysis CSS -->
+<link rel="stylesheet" href="{% static 'css/market_analysis.css' %}">
+
+<style>
+    /* Additional custom styling for enhanced user experience */
+    .breadcrumbs {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: var(--radius-md) !important;
+        padding: var(--space-md) var(--space-lg) !important;
+        margin-bottom: var(--space-xl) !important;
+        box-shadow: var(--shadow-sm) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .breadcrumbs a {
+        color: var(--primary-color) !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        transition: color 0.3s ease !important;
+    }
+    
+    .breadcrumbs a:hover {
+        color: var(--primary-light) !important;
+    }
+    
+    /* Enhanced navigation styling */
+    .module caption {
+        background: var(--gradient-primary) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: var(--space-lg) !important;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    /* Data visualization enhancements */
+    .dashboard-chart {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-top: var(--space-lg);
+    }
+    
+    /* Metric cards styling */
+    .metric-card {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(248, 250, 252, 0.8) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: var(--space-sm);
+    }
+    
+    .metric-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .metric-change {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: var(--space-sm);
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-xl);
+    }
+    
+    .metric-change.positive {
+        background: rgba(5, 150, 105, 0.1);
+        color: var(--secondary-color);
+    }
+    
+    .metric-change.negative {
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--danger-color);
+    }
+</style>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script>
+    // Add some interactive enhancements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add hover effects to data cards
+        const cards = document.querySelectorAll('.analysis-tool-card, .stat-card, .action-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Add smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+        
+        // Enhanced form interactions
+        const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+        
+        // Add loading states to buttons
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.type === 'submit') {
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    this.disabled = true;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

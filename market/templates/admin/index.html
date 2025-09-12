@@ -1,0 +1,156 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+{{ block.super }}
+
+{% if analysis_tools %}
+<!-- Dashboard Overview Cards -->
+<div class="module">
+    <h2><i class="fas fa-chart-line"></i> Market Intelligence Dashboard</h2>
+    <div style="padding: var(--space-xl);">
+        <!-- Key Metrics Row -->
+        <div class="stats-grid" style="margin-bottom: var(--space-2xl);">
+            <div class="metric-card">
+                <div class="metric-value">1.05M</div>
+                <div class="metric-label">Total Transactions</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> +12.5%
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">92.3K</div>
+                <div class="metric-label">Unique Products</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> +8.2%
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">2,497</div>
+                <div class="metric-label">Active Customers</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> +15.3%
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">$2.8M</div>
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> +18.7%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analysis Tools Grid -->
+        <div class="analysis-tools-grid">
+            {% for tool in analysis_tools %}
+            <div class="analysis-tool-card">
+                <div class="tool-icon">{{ tool.icon }}</div>
+                <h3><a href="{{ tool.url }}">{{ tool.title }}</a></h3>
+                <p>{{ tool.description }}</p>
+                <div style="margin-top: var(--space-lg);">
+                    <a href="{{ tool.url }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Launch Tool
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Quick Insights Section -->
+        <div class="dashboard-chart">
+            <h3><i class="fas fa-chart-bar"></i> Market Trends Overview</h3>
+            <div class="chart-container">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="info-box">
+            <h4><i class="fas fa-clock"></i> Recent Analysis Activities</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border-color);">
+                    <i class="fas fa-chart-line" style="color: var(--primary-light); margin-right: var(--space-sm);"></i>
+                    Association rules analysis completed - 45 new patterns discovered
+                    <span style="float: right; color: var(--text-light); font-size: 0.8rem;">2 minutes ago</span>
+                </li>
+                <li style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border-color);">
+                    <i class="fas fa-users" style="color: var(--secondary-color); margin-right: var(--space-sm);"></i>
+                    Customer segmentation updated - 156 customers re-classified
+                    <span style="float: right; color: var(--text-light); font-size: 0.8rem;">15 minutes ago</span>
+                </li>
+                <li style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--border-color);">
+                    <i class="fas fa-shopping-basket" style="color: var(--accent-color); margin-right: var(--space-sm);"></i>
+                    Basket analysis refreshed - Top 100 product combinations updated
+                    <span style="float: right; color: var(--text-light); font-size: 0.8rem;">1 hour ago</span>
+                </li>
+                <li style="padding: var(--space-sm) 0;">
+                    <i class="fas fa-database" style="color: var(--warning-color); margin-right: var(--space-sm);"></i>
+                    Data quality check completed - 99.8% data integrity
+                    <span style="float: right; color: var(--text-light); font-size: 0.8rem;">3 hours ago</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create a sample trends chart
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
+                    label: 'Sales Volume',
+                    data: [65, 78, 90, 81, 95, 108],
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Customer Acquisition',
+                    data: [28, 35, 42, 48, 52, 61],
+                    borderColor: 'rgba(5, 150, 105, 1)',
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

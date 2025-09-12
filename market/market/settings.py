@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 3rd-party
-    'django_extensions',
+    # 'django_extensions',
 
     # local apps
-    'core', 'customers', 'catalog',
+    'core', 'customers', 'catalog', 'dunnhumby',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +59,7 @@ ROOT_URLCONF = 'market.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,14 +81,13 @@ WSGI_APPLICATION = 'market.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "mssql",
-        "NAME":   "marketdb",
-        "HOST":   r"localhost\SQLEXPRESS",    # your instance
-        # remove USER and PASSWORD entirely!
+        "NAME": "marketdb",
+        "HOST": r"localhost\SQLEXPRESS",
         "OPTIONS": {
-            "driver":                  "ODBC Driver 17 for SQL Server",
-            "Encrypt":                 "no",       # dev only, skip TLS
-            "TrustServerCertificate":  "yes",      # skip cert check
-            "Trusted_Connection":      "yes",      # <— use Windows auth
+            "driver": "ODBC Driver 17 for SQL Server",
+            "Encrypt": "no",
+            "TrustServerCertificate": "yes",
+            "Trusted_Connection": "yes",
         },
     }
 }
@@ -132,6 +131,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

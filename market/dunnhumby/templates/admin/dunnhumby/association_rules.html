@@ -1,0 +1,146 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="head">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"Django administration" }}</a>
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h2>Association Rules Analysis</h2>
+    
+    <div class="module">
+        <h3>Generate New Rules</h3>
+        <form method="post">
+            {% csrf_token %}
+            <p>
+                <label for="min_support">Minimum Support (0.0 - 1.0):</label>
+                <input type="number" id="min_support" name="min_support" step="0.01" min="0" max="1" value="{{ min_support|default:'0.01' }}">
+            </p>
+            <p>
+                <label for="min_confidence">Minimum Confidence (0.0 - 1.0):</label>
+                <input type="number" id="min_confidence" name="min_confidence" step="0.01" min="0" max="1" value="{{ min_confidence|default:'0.5' }}">
+            </p>
+            <button type="submit">Generate Association Rules</button>
+        </form>
+    </div>
+
+    <div class="results">
+        <h3>Association Rules (Top by Lift)</h3>
+        {% if rules %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Rule</th>
+                    <th>Support</th>
+                    <th>Confidence</th>
+                    <th>Lift</th>
+                    {% if rules.0.rule_type %}
+                    <th>Type</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td>
+                        {% if rule.antecedent %}
+                            {% for item in rule.antecedent %}{{ item }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            →
+                            {% for item in rule.consequent %}{{ item }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        {% else %}
+                            {{ rule.get_rule_display|default:"N/A" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ rule.support|floatformat:4 }}</td>
+                    <td>{{ rule.confidence|floatformat:4 }}</td>
+                    <td>{{ rule.lift|floatformat:4 }}</td>
+                    {% if rule.rule_type %}
+                    <td>{{ rule.get_rule_type_display|default:rule.rule_type }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No association rules available. Generate some rules using the form above or check that there is sufficient transaction data.</p>
+        {% endif %}
+    </div>
+
+    <div class="help">
+        <h3>Understanding Association Rules</h3>
+        <ul>
+            <li><strong>Support:</strong> How frequently the itemset appears in the dataset</li>
+            <li><strong>Confidence:</strong> How often rule is correct (likelihood of consequent when antecedent is present)</li>
+            <li><strong>Lift:</strong> How much more likely the consequent is when antecedent is present (lift > 1 indicates positive correlation)</li>
+        </ul>
+        <p>Higher lift values indicate stronger associations between products.</p>
+    </div>
+</div>
+
+<style>
+.results {
+    margin: 20px 0;
+}
+.results h3, .module h3 {
+    background: #79aec8;
+    padding: 8px 10px;
+    color: white;
+    margin: 0 0 10px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+tr:hover {
+    background-color: #f9f9f9;
+}
+form p {
+    margin: 10px 0;
+}
+form label {
+    display: inline-block;
+    width: 200px;
+    font-weight: bold;
+}
+form input {
+    padding: 5px;
+    margin-left: 10px;
+}
+button {
+    background: #79aec8;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+}
+button:hover {
+    background: #6a9bb8;
+}
+.help {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-top: 20px;
+}
+.help h3 {
+    background: #417690;
+    color: white;
+    padding: 8px 10px;
+    margin: -15px -15px 10px -15px;
+}
+</style>
+{% endblock %}

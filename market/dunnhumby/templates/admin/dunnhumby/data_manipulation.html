@@ -1,0 +1,301 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="head">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"Django administration" }}</a>
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h2>Database Manipulation & Data Management</h2>
+    
+    {% if result_message %}
+    <div class="success-message">
+        <strong>Success:</strong> {{ result_message }}
+    </div>
+    {% endif %}
+
+    <div class="module">
+        <h3>Current Database Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.total_transactions|default:0 }}</div>
+                <div class="stat-label">Total Transactions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.total_products|default:0 }}</div>
+                <div class="stat-label">Total Products</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.total_households|default:0 }}</div>
+                <div class="stat-label">Total Households</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.total_campaigns|default:0 }}</div>
+                <div class="stat-label">Total Campaigns</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.basket_analyses|default:0 }}</div>
+                <div class="stat-label">Basket Analyses</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.association_rules|default:0 }}</div>
+                <div class="stat-label">Association Rules</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ data_stats.customer_segments|default:0 }}</div>
+                <div class="stat-label">Customer Segments</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="module">
+        <h3>Data Operations</h3>
+        <div class="operations-grid">
+            <div class="operation-item">
+                <h4>Refresh Basket Analysis</h4>
+                <p>Recalculate basket statistics and department mix for all transactions. This will update the basket analysis data used in reports.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="refresh_basket_analysis">
+                    <button type="submit" class="btn-primary">Refresh Analysis</button>
+                </form>
+            </div>
+
+            <div class="operation-item">
+                <h4>Generate Customer Segments</h4>
+                <p>Perform RFM (Recency, Frequency, Monetary) analysis to segment customers based on their purchasing behavior.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="generate_segments">
+                    <button type="submit" class="btn-success">Generate Segments</button>
+                </form>
+            </div>
+
+            <div class="operation-item">
+                <h4>Clean Data</h4>
+                <p>Remove or correct inconsistent data entries, such as negative sales values or invalid transactions.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clean_data">
+                    <button type="submit" class="btn-warning">Clean Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="module">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="{% url 'admin:dunnhumby_transaction_changelist' %}" class="action-link">
+                <div class="action-icon">📊</div>
+                <div class="action-text">
+                    <strong>View Transactions</strong><br>
+                    Browse and filter transaction data
+                </div>
+            </a>
+            
+            <a href="{% url 'admin:dunnhumby_dunnhumbyproduct_changelist' %}" class="action-link">
+                <div class="action-icon">🛍️</div>
+                <div class="action-text">
+                    <strong>View Products</strong><br>
+                    Browse product catalog
+                </div>
+            </a>
+            
+            <a href="{% url 'admin:dunnhumby_household_changelist' %}" class="action-link">
+                <div class="action-icon">🏠</div>
+                <div class="action-text">
+                    <strong>View Customers</strong><br>
+                    Browse household data
+                </div>
+            </a>
+            
+            <a href="{% url 'admin:dunnhumby_customersegment_changelist' %}" class="action-link">
+                <div class="action-icon">👥</div>
+                <div class="action-text">
+                    <strong>Customer Segments</strong><br>
+                    View RFM analysis results
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <h3>⚠️ Important Notes</h3>
+        <ul>
+            <li>Data operations may take several minutes depending on dataset size</li>
+            <li>Always backup your database before performing bulk operations</li>
+            <li>Some operations will delete existing analysis data and regenerate it</li>
+            <li>Monitor system resources during large data processing operations</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.results, .module {
+    margin: 20px 0;
+}
+.results h3, .module h3 {
+    background: #79aec8;
+    padding: 8px 10px;
+    color: white;
+    margin: 0 0 10px 0;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 15px;
+    text-align: center;
+    border-radius: 4px;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #79aec8;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.operations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.operation-item {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.operation-item h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.operation-item p {
+    color: #666;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+.btn-primary, .btn-success, .btn-warning {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-link {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s;
+}
+
+.action-link:hover {
+    background: #f0f8ff;
+    border-color: #79aec8;
+    transform: translateY(-2px);
+}
+
+.action-icon {
+    font-size: 2em;
+    margin-right: 15px;
+}
+
+.action-text strong {
+    color: #79aec8;
+}
+
+.warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 30px;
+}
+
+.warning-box h3 {
+    color: #856404;
+    margin: 0 0 10px 0;
+}
+
+.warning-box ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.warning-box li {
+    color: #856404;
+    margin-bottom: 5px;
+}
+</style>
+{% endblock %}

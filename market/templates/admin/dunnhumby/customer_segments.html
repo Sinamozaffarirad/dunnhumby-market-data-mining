@@ -1,0 +1,161 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="module">
+        <h2>Customer Segmentation Dashboard</h2>
+        
+        <div class="dashboard-stats">
+            <h3>RFM Segment Overview</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Segment</th>
+                        <th>Customer Count</th>
+                        <th>Average Spend ($)</th>
+                        <th>Average Transactions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for segment in segments %}
+                    <tr>
+                        <td><strong>{{ segment.rfm_segment }}</strong></td>
+                        <td>{{ segment.count }}</td>
+                        <td>${{ segment.avg_spend|floatformat:2 }}</td>
+                        <td>{{ segment.avg_transactions|floatformat:1 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No customer segments found. Generate segments using the data manipulation panel.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-stats">
+            <h3>Recent Customer Analysis</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Household Key</th>
+                        <th>Segment</th>
+                        <th>RFM Scores (R-F-M)</th>
+                        <th>Total Spend ($)</th>
+                        <th>Total Transactions</th>
+                        <th>Avg Basket Value ($)</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in recent_customers %}
+                    <tr>
+                        <td>{{ customer.household_key }}</td>
+                        <td>
+                            <span class="segment-badge segment-{{ customer.rfm_segment|lower|cut:" " }}">
+                                {{ customer.rfm_segment }}
+                            </span>
+                        </td>
+                        <td>{{ customer.recency_score }}-{{ customer.frequency_score }}-{{ customer.monetary_score }}</td>
+                        <td>${{ customer.total_spend|floatformat:2 }}</td>
+                        <td>{{ customer.total_transactions }}</td>
+                        <td>${{ customer.avg_basket_value|floatformat:2 }}</td>
+                        <td>{{ customer.updated_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">No customer data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info-box">
+            <h4>RFM Segment Definitions</h4>
+            <ul>
+                <li><strong>Champions:</strong> High value, high frequency, recent customers</li>
+                <li><strong>Loyal Customers:</strong> High frequency, good monetary value</li>
+                <li><strong>Potential Loyalists:</strong> Recent customers with good frequency</li>
+                <li><strong>New Customers:</strong> Recent but low frequency/monetary</li>
+                <li><strong>Big Spenders:</strong> High monetary regardless of recency/frequency</li>
+                <li><strong>Regular Customers:</strong> Consistent but not exceptional</li>
+                <li><strong>Need Attention:</strong> Good customers who haven't purchased recently</li>
+                <li><strong>At Risk:</strong> Were good customers but haven't purchased recently</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-stats {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.table th, .table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #417690;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.segment-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.segment-champions { background-color: #28a745; }
+.segment-loyalcustomers { background-color: #007bff; }
+.segment-potentialloyalists { background-color: #17a2b8; }
+.segment-newcustomers { background-color: #6f42c1; }
+.segment-bigspenders { background-color: #fd7e14; }
+.segment-regularcustomers { background-color: #20c997; }
+.segment-needattention { background-color: #ffc107; color: #212529; }
+.segment-atrisk { background-color: #dc3545; }
+.segment-standard { background-color: #6c757d; }
+
+.info-box {
+    background-color: #e7f3ff;
+    padding: 15px;
+    border-left: 4px solid #417690;
+    margin-top: 20px;
+}
+
+.info-box h4 {
+    margin-top: 0;
+    color: #417690;
+}
+
+.info-box ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.info-box li {
+    margin-bottom: 5px;
+}
+</style>
+{% endblock %}
