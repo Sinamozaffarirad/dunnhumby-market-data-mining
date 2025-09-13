@@ -37,22 +37,23 @@
           </div>
           <div class="card-body">
             {% if rules %}
-            <div class="table-responsive">
-              <table class="table">
-                <thead><tr><th>Antecedent</th><th>Consequent</th><th>Support</th><th>Confidence</th><th>Lift</th><th>Type</th></tr></thead>
-                <tbody>
-                {% for rule in rules %}
-                  <tr>
-                    <td>{% if rule.antecedent %}{% for i in rule.antecedent %}<span class="badge bg-secondary">{{ i }}</span>{% if not forloop.last %} {% endif %}{% endfor %}{% else %}{{ rule.get_rule_display|default:"N/A" }}{% endif %}</td>
-                    <td>{% if rule.consequent %}{% for i in rule.consequent %}<span class="badge bg-info text-dark">{{ i }}</span>{% if not forloop.last %} {% endif %}{% endfor %}{% else %}-{% endif %}</td>
-                    <td>{{ rule.support|floatformat:4 }}</td>
-                    <td>{{ rule.confidence|floatformat:4 }}</td>
-                    <td><span class="badge bg-success">{{ rule.lift|floatformat:4 }}</span></td>
-                    <td>{{ rule.rule_type|default:"frequent_itemset" }}</td>
-                  </tr>
-                {% endfor %}
-                </tbody>
-              </table>
+            <div class="row g-3">
+              {% for rule in rules %}
+              <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm rule-card" style="cursor:pointer;" data-ant="{{ rule.antecedent|join:', ' }}" data-con="{{ rule.consequent|join:', ' }}" data-sup="{{ rule.support|floatformat:4 }}" data-conf="{{ rule.confidence|floatformat:4 }}" data-lift="{{ rule.lift|floatformat:4 }}" data-type="{{ rule.rule_type|default:'frequent_itemset' }}">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                      <div class="fw-semibold">{{ rule.antecedent|join:', ' }}</div>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                    <div class="mb-2">{{ rule.consequent|join:', ' }}</div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Support</span><span>{{ rule.support|floatformat:4 }}</span></div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Confidence</span><span>{{ rule.confidence|floatformat:4 }}</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted small">Lift</span><span class="badge bg-success">{{ rule.lift|floatformat:4 }}</span></div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
             </div>
             {% else %}
               <div class="info-box">No association rules found. Try generating new rules with different parameters.</div>
@@ -63,4 +64,20 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.rule-card').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const title = `${el.dataset.ant} → ${el.dataset.con}`;
+      const body = `<div class="row g-3">
+        <div class=\"col-6\"><div class=\"border rounded p-2\"><div class=\"text-muted small\">Support</div><div class=\"fw-bold\">${el.dataset.sup}</div></div></div>
+        <div class=\"col-6\"><div class=\"border rounded p-2\"><div class=\"text-muted small\">Confidence</div><div class=\"fw-bold\">${el.dataset.conf}</div></div></div>
+        <div class=\"col-6\"><div class=\"border rounded p-2\"><div class=\"text-muted small\">Lift</div><div class=\"fw-bold\">${el.dataset.lift}</div></div></div>
+        <div class=\"col-6\"><div class=\"border rounded p-2\"><div class=\"text-muted small\">Type</div><div class=\"fw-bold\">${el.dataset.type}</div></div></div>
+      </div>`;
+      showDetailModal(title, body);
+    })
+  })
+})
+</script>
 {% endblock %}

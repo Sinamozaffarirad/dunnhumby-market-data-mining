@@ -265,6 +265,90 @@ def api_table_schema(request):
 
 
 @login_required(login_url='/admin/login/')
+def api_basket_details(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    basket_id = request.POST.get('basket_id')
+    if not basket_id:
+        return JsonResponse({'error': 'basket_id required'}, status=400)
+    try:
+        qs = Transaction.objects.values('product_id','quantity','sales_value','day','store_id','household_key').filter(basket_id=basket_id).order_by('day')
+        items = list(qs[:200])
+        total_sales = sum(float(i.get('sales_value') or 0) for i in items)
+        unique_products = list({i['product_id'] for i in items})
+        prod_info = {}
+        if unique_products:
+            for p in DunnhumbyProduct.objects.filter(product_id__in=unique_products).values('product_id','brand','department','commodity_desc'):
+                prod_info[p['product_id']] = {'brand': p['brand'], 'department': p['department'], 'commodity_desc': p['commodity_desc']}
+        for i in items:
+            meta = prod_info.get(i['product_id'], {})
+            i['brand'] = meta.get('brand')
+            i['department'] = meta.get('department')
+            i['commodity_desc'] = meta.get('commodity_desc')
+        resp = {
+            'basket_id': basket_id,
+            'total_sales': total_sales,
+            'item_count': len(items),
+            'unique_products': len(unique_products),
+            'items': items,
+        }
+        return JsonResponse(resp)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/admin/login/')
+def api_product_details(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    product_id = request.POST.get('product_id')
+    if not product_id:
+        return JsonResponse({'error': 'product_id required'}, status=400)
+    try:
+        agg = Transaction.objects.filter(product_id=product_id).aggregate(
+            total_sales=Sum('sales_value'),
+            total_txns=Count('product_id'),
+            unique_households=Count('household_key', distinct=True)
+        )
+        top_households = list(
+            Transaction.objects.filter(product_id=product_id).values('household_key').annotate(spend=Sum('sales_value')).order_by('-spend')[:5]
+        )
+        prod = DunnhumbyProduct.objects.filter(product_id=product_id).values('commodity_desc','brand','department','manufacturer').first() or {}
+        return JsonResponse({
+            'product_id': product_id,
+            'meta': prod,
+            'stats': {k: float(v) if v is not None and k=='total_sales' else v for k,v in agg.items()},
+            'top_households': top_households,
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/admin/login/')
+def api_household_details(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    household_key = request.POST.get('household_key')
+    if not household_key:
+        return JsonResponse({'error': 'household_key required'}, status=400)
+    try:
+        seg = CustomerSegment.objects.filter(household_key=household_key).values(
+            'rfm_segment','recency_score','frequency_score','monetary_score','total_spend','total_transactions','avg_basket_value','updated_at'
+        ).first()
+        recent_txns = list(Transaction.objects.filter(household_key=household_key).values(
+            'basket_id','product_id','quantity','sales_value','day'
+        ).order_by('-day')[:15])
+        # enrich with product names
+        pids = list({t['product_id'] for t in recent_txns})
+        prodmap = {p['product_id']: p['commodity_desc'] for p in DunnhumbyProduct.objects.filter(product_id__in=pids).values('product_id','commodity_desc')}
+        for t in recent_txns:
+            t['commodity_desc'] = prodmap.get(t['product_id'])
+        return JsonResponse({'household_key': household_key, 'segment': seg, 'recent_transactions': recent_txns})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/admin/login/')
 def api_update_record(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)

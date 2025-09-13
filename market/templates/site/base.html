@@ -49,6 +49,7 @@
       <a href="/analysis/" style="font-weight:800; letter-spacing:.25px;">Dunnhumby Market Analytics</a>
       <div class="grow"></div>
       <a href="/analysis/">Dashboard</a>
+      <a href="/analysis/basket-analysis/">Basket Analysis</a>
       <a href="/analysis/association-rules/">Association Rules</a>
       <a href="/analysis/customer-segments/">Customer Segments</a>
       <a href="/analysis/data-management/">Data Management</a>
@@ -74,8 +75,29 @@
         if(btn){ btn.addEventListener('click', function(){ setTheme((document.documentElement.getAttribute('data-theme')==='dark')?'light':'dark'); }); }
       });
     })();
+    // shared detail modal helper
+    function showDetailModal(title, bodyHtml){
+      var modalEl = document.getElementById('detailModal');
+      if(!modalEl){ return alert(title + "\n\n" + bodyHtml.replace(/<[^>]+>/g, '')); }
+      modalEl.querySelector('.modal-title').innerHTML = title;
+      modalEl.querySelector('.modal-body').innerHTML = bodyHtml;
+      var modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
   </script>
   {% block footer %}{% endblock %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Shared modal -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -9,44 +9,114 @@
         <i class="fas fa-basket-shopping"></i> Shopping Basket Analysis
       </div>
       <div class="card-body">
-        <div class="row g-4">
-          <div class="col-12">
-            <h5 class="mb-3">Top 20 Baskets by Value</h5>
-            <div class="table-responsive">
-              <table class="table align-middle">
-                <thead><tr><th>Basket ID</th><th>Total Items</th><th>Total Value ($)</th><th>Unique Products</th></tr></thead>
-                <tbody>
-                {% for basket in basket_stats %}
-                  <tr><td>{{ basket.basket_id }}</td><td>{{ basket.total_items }}</td><td>${{ basket.total_value|floatformat:2 }}</td><td>{{ basket.unique_products }}</td></tr>
-                {% empty %}
-                  <tr><td colspan="4">No basket data available</td></tr>
-                {% endfor %}
-                </tbody>
-              </table>
+        <div class="mb-2 text-muted small">Explore high-value baskets and top products. Click a card to see details.</div>
+        <h5 class="mt-3 mb-2">Top 20 Baskets by Value</h5>
+        <div class="row g-3 mb-4">
+          {% for b in basket_stats %}
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card h-100 shadow-sm basket-card" data-basket-id="{{ b.basket_id }}" style="cursor:pointer;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold">#{{ b.basket_id }}</span>
+                  <span class="badge bg-secondary">{{ b.unique_products }} items</span>
+                </div>
+                <div class="fs-5 fw-bold">${{ b.total_value|floatformat:2 }}</div>
+                <div class="text-muted small">Total | Qty {{ b.total_items }}</div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12"><div class="info-box">No basket data available</div></div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <h5 class="mb-2">Top 10 Products by Sales</h5>
+            <div class="row g-3">
+              {% for p in dept_analysis %}
+              <div class="col-12 col-sm-6">
+                <div class="card h-100 shadow-sm product-card" data-product-id="{{ p.product_id }}" style="cursor:pointer;">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-1">
+                      <span class="fw-semibold">{{ p.product_id }}</span>
+                      <span class="badge bg-success">${{ p.total_sales|floatformat:2 }}</span>
+                    </div>
+                    <div class="text-muted small">Transactions: {{ p.total_transactions }}</div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
             </div>
           </div>
           <div class="col-12 col-lg-6">
-            <h5 class="mb-3">Top 10 Products by Sales</h5>
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product ID</th><th>Total Sales ($)</th><th>Total Txns</th></tr></thead>
-              <tbody>
-              {% for product in dept_analysis %}
-                <tr><td>{{ product.product_id }}</td><td>${{ product.total_sales|floatformat:2 }}</td><td>{{ product.total_transactions }}</td></tr>
-              {% empty %}<tr><td colspan="3">No product data</td></tr>{% endfor %}
-              </tbody></table></div>
-          </div>
-          <div class="col-12 col-lg-6">
-            <h5 class="mb-3">Top 20 Products by Frequency</h5>
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product ID</th><th>Frequency</th><th>Total Sales ($)</th></tr></thead>
-              <tbody>
-              {% for product in top_products %}
-                <tr><td>{{ product.product_id }}</td><td>{{ product.frequency }}</td><td>${{ product.total_sales|floatformat:2 }}</td></tr>
-              {% empty %}<tr><td colspan="3">No frequency data</td></tr>{% endfor %}
-              </tbody></table></div>
+            <h5 class="mb-2">Top 20 Products by Frequency</h5>
+            <div class="row g-3">
+              {% for p in top_products %}
+              <div class="col-12 col-sm-6">
+                <div class="card h-100 shadow-sm product-card" data-product-id="{{ p.product_id }}" style="cursor:pointer;">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-1">
+                      <span class="fw-semibold">{{ p.product_id }}</span>
+                      <span class="badge bg-info text-dark">Freq {{ p.frequency }}</span>
+                    </div>
+                    <div class="text-muted small">Sales: ${{ p.total_sales|floatformat:2 }}</div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const csrftoken = (document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))||'').split('=')[1]||'';
+  // Basket details
+  document.querySelectorAll('.basket-card').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const id = el.dataset.basketId;
+      const form = new FormData(); form.append('csrfmiddlewaretoken', csrftoken); form.append('basket_id', id);
+      const res = await fetch('/analysis/api/basket/', {method:'POST', body: form});
+      const j = await res.json();
+      if(j.error){ return showDetailModal('Basket '+id, '<div class="text-danger">'+j.error+'</div>'); }
+      let body = `<div class="mb-2 text-muted">Unique products: ${j.unique_products} | Items: ${j.item_count} | Total: $${(j.total_sales||0).toFixed(2)}</div>`;
+      body += '<div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Product</th><th>Qty</th><th>Sales</th><th>Day</th></tr></thead><tbody>';
+      (j.items||[]).forEach(it=>{ body += `<tr><td>${it.product_id} ${it.commodity_desc?('— '+it.commodity_desc):''}</td><td>${it.quantity}</td><td>$${Number(it.sales_value||0).toFixed(2)}</td><td>${it.day}</td></tr>`; });
+      body += '</tbody></table></div>';
+      showDetailModal('Basket #'+id, body);
+    });
+  });
+  // Product details
+  document.querySelectorAll('.product-card').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const pid = el.dataset.productId;
+      const form = new FormData(); form.append('csrfmiddlewaretoken', csrftoken); form.append('product_id', pid);
+      const res = await fetch('/analysis/api/product/', {method:'POST', body: form});
+      const j = await res.json();
+      if(j.error){ return showDetailModal('Product '+pid, '<div class="text-danger">'+j.error+'</div>'); }
+      const meta = j.meta||{}; const st = j.stats||{};
+      let body = `<div class="row g-3">
+        <div class="col-12 col-md-6"><div class="border rounded p-2"><div class="text-muted small">Commodity</div><div class="fw-semibold">${meta.commodity_desc||'-'}</div></div></div>
+        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Brand</div><div class="fw-semibold">${meta.brand||'-'}</div></div></div>
+        <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted small">Department</div><div class="fw-semibold">${meta.department||'-'}</div></div></div>
+      </div>`;
+      body += `<div class="row g-3 mt-2">
+        <div class="col-4 text-center"><div class="text-muted small">Total Sales</div><div class="fw-bold">$${Number(st.total_sales||0).toFixed(2)}</div></div>
+        <div class="col-4 text-center"><div class="text-muted small">Transactions</div><div class="fw-bold">${st.total_txns||0}</div></div>
+        <div class="col-4 text-center"><div class="text-muted small">Unique HH</div><div class="fw-bold">${st.unique_households||0}</div></div>
+      </div>`;
+      body += '<h6 class="mt-3">Top Households</h6><ul class="list-group list-group-flush">';
+      (j.top_households||[]).forEach(h=>{ body += `<li class="list-group-item d-flex justify-content-between"><span>${h.household_key}</span><span class="badge bg-secondary">$${Number(h.spend||0).toFixed(2)}</span></li>`; });
+      body += '</ul>';
+      showDetailModal('Product '+pid, body);
+    });
+  });
+});
+</script>
 
 {% endblock %}

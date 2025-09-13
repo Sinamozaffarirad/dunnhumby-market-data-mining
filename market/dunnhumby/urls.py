@@ -14,4 +14,7 @@ urlpatterns = [
     path("api/update/", views.api_update_record, name="api_update_record"),
     path("api/export/", views.api_export_data, name="api_export_data"),
     path("api/schema/", views.api_table_schema, name="api_table_schema"),
+    path("api/basket/", views.api_basket_details, name="api_basket_details"),
+    path("api/product/", views.api_product_details, name="api_product_details"),
+    path("api/household/", views.api_household_details, name="api_household_details"),
 ]
