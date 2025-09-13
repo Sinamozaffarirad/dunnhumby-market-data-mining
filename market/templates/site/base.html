@@ -417,10 +417,39 @@
         return alert(title + '\n\n' + bodyHtml.replace(/<[^>]+>/g, ''));
       }
       
+      // Dispose of any existing modal instance first
+      const existingModal = bootstrap.Modal.getInstance(modalEl);
+      if (existingModal) {
+        existingModal.dispose();
+      }
+      
+      // Clear any leftover backdrop
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      
+      // Reset body classes and styles
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
       modalEl.querySelector('.modal-title').innerHTML = title;
       modalEl.querySelector('.modal-body').innerHTML = bodyHtml;
       
-      const modal = new bootstrap.Modal(modalEl);
+      const modal = new bootstrap.Modal(modalEl, {
+        backdrop: true,
+        keyboard: true
+      });
+      
+      // Add proper cleanup when modal is hidden
+      modalEl.addEventListener('hidden.bs.modal', function() {
+        const allBackdrops = document.querySelectorAll('.modal-backdrop');
+        allBackdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        modal.dispose();
+      }, { once: true });
+      
       modal.show();
       
       // Add fade-in animation to modal content

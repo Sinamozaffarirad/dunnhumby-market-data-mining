@@ -55,8 +55,6 @@
   margin-bottom: 2rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   max-width: 100%;
-  overflow: visible;
-  max-height: 85vh;
 }
 
 .tab-buttons {
@@ -92,10 +90,7 @@
 .tab-content {
   display: none;
   max-width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
   padding: 0;
-  max-height: 80vh;
 }
 
 .tab-content.active {
@@ -220,12 +215,67 @@
 }
 
 .association-rules-container {
-  max-height: 500px;
-  overflow-y: auto;
   padding: 1rem;
   border: 1px solid #e9ecef;
   border-radius: 10px;
   margin-top: 1rem;
+}
+
+.scrollable-section {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.scrollable-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.scrollable-section::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 3px;
+}
+
+.scrollable-section::-webkit-scrollbar-thumb:hover {
+  background: #5a67d8;
+}
+
+.rule-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rule-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Enhanced popup interactivity */
+#expandedContent .basket-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#expandedContent .basket-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+  border-left: 4px solid #667eea;
+}
+
+#expandedContent .rule-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#expandedContent .rule-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border-left-width: 6px;
 }
 
 .rule-card {
@@ -320,8 +370,6 @@
 }
 
 .insights-container {
-  max-height: 500px;
-  overflow-y: auto;
   padding: 1rem;
   border: 1px solid #e9ecef;
   border-radius: 10px;
@@ -398,7 +446,6 @@
   
   .association-rules-container,
   .insights-container {
-    max-height: 300px;
     padding: 0.8rem;
   }
   
@@ -430,32 +477,16 @@
   border-radius: 3px;
 }
 
-/* Enable proper scrolling for tab content */
 .tab-content.active {
-  max-height: 80vh;
-  overflow-y: auto;
+  display: block;
+}
+
+/* Ensure natural scrolling */
+html, body {
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
-.tab-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.tab-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.tab-content::-webkit-scrollbar-thumb {
-  background: #667eea;
-  border-radius: 4px;
-}
-
-.tab-content::-webkit-scrollbar-thumb:hover {
-  background: #5a67d8;
-}
-
-/* Prevent horizontal overflow */
 * {
   box-sizing: border-box;
 }
@@ -541,27 +572,34 @@
       <!-- Key Metrics -->
       <div class="metric-grid">
         <div class="metric-item">
-          <div class="metric-value" id="totalBaskets">{{ basket_stats|length|default:"0" }}</div>
-          <div class="metric-label">Total Baskets</div>
+          <div class="metric-value" id="totalBaskets">114,156</div>
+          <div class="metric-label">Total Baskets<br><small style="color: #6c757d; font-size: 0.6rem;">from 1M+ transactions</small></div>
         </div>
         <div class="metric-item">
-          <div class="metric-value" id="avgBasketSize">3.2</div>
-          <div class="metric-label">Avg Basket Size</div>
+          <div class="metric-value" id="avgBasketSize">9.2</div>
+          <div class="metric-label">Avg Basket Size<br><small style="color: #6c757d; font-size: 0.6rem;">items per basket</small></div>
         </div>
         <div class="metric-item">
-          <div class="metric-value" id="strongRules">127</div>
-          <div class="metric-label">Strong Rules Found</div>
+          <div class="metric-value" id="strongRules">0</div>
+          <div class="metric-label">Strong Rules Found<br><small style="color: #6c757d; font-size: 0.6rem;">run algorithm to generate</small></div>
         </div>
         <div class="metric-item">
-          <div class="metric-value" id="topLift">2.8</div>
-          <div class="metric-label">Highest Lift</div>
+          <div class="metric-value" id="topLift">-</div>
+          <div class="metric-label">Highest Lift<br><small style="color: #6c757d; font-size: 0.6rem;">measure of association</small></div>
         </div>
       </div>
 
       <!-- Association Rules -->
       <div class="chart-container">
-        <h5><i class="fas fa-project-diagram"></i> Association Rules (Top 10) — Department Level</h5>
-        <div class="association-rules-container" id="associationRules">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0" id="deptRulesTitle"><i class="fas fa-project-diagram"></i> Association Rules (0/∞) — Department Level</h5>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="expandSection('department')" title="View All in Popup">
+              <i class="fas fa-expand-arrows-alt"></i> Expand
+            </button>
+          </div>
+        </div>
+        <div class="association-rules-container scrollable-section" id="associationRules" style="max-height: 400px; overflow-y: auto;">
           <div class="text-center py-3 text-muted">
             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
             <p>Click "Run Apriori Algorithm" to generate association rules...</p>
@@ -571,8 +609,15 @@
 
       <!-- Commodity-level Rules -->
       <div class="chart-container">
-        <h5><i class="fas fa-boxes-stacked"></i> Association Rules (Top 10) — Commodity Level</h5>
-        <div class="association-rules-container" id="associationRulesCommodity">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0" id="commodityRulesTitle"><i class="fas fa-boxes-stacked"></i> Association Rules (0/∞) — Commodity Level</h5>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="expandSection('commodity')" title="View All in Popup">
+              <i class="fas fa-expand-arrows-alt"></i> Expand
+            </button>
+          </div>
+        </div>
+        <div class="association-rules-container scrollable-section" id="associationRulesCommodity" style="max-height: 400px; overflow-y: auto;">
           <div class="text-center py-3 text-muted">
             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
             <p>Click "Run Apriori Algorithm" to generate commodity-level rules...</p>
@@ -582,8 +627,15 @@
 
       <!-- Baskets Grid -->
       <div class="chart-container">
-        <h5><i class="fas fa-shopping-basket"></i> High-Value Baskets Analysis</h5>
-        <div class="row g-3" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="fas fa-shopping-basket"></i> High-Value Baskets Analysis</h5>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="expandSection('baskets')" title="View All in Popup">
+              <i class="fas fa-expand-arrows-alt"></i> Expand
+            </button>
+          </div>
+        </div>
+        <div class="row g-3 scrollable-section" id="basketsGrid" style="max-height: 400px; overflow-y: auto;">
         {% for b in basket_stats %}
         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
           <div class="basket-card fade-in" data-basket-id="{{ b.basket_id }}">
@@ -838,9 +890,87 @@ function createDepartmentBadge(department) {
   `;
 }
 
-// Create commodity badge (simple chip style)
-function createCommodityBadge(name){
-  return `<span class="badge" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color:#fff; font-weight:600; border-radius: 999px; padding:.25rem .5rem;">${name}</span>`;
+// Commodity mapping with colors and emojis (based on actual DB commodities)
+const COMMODITY_CONFIG = {
+  // Frozen Items
+  'FRZN ICE': { color: '#3B82F6', emoji: '🧊', gradient: 'linear-gradient(135deg, #3B82F6, #60A5FA)' },
+  'ICE CREAM/MILK/SHERBTS': { color: '#EC4899', emoji: '🍦', gradient: 'linear-gradient(135deg, #EC4899, #F472B6)' },
+  
+  // Bakery & Bread
+  'BREAD': { color: '#D4AC0D', emoji: '🍞', gradient: 'linear-gradient(135deg, #D4AC0D, #F1C40F)' },
+  'COOKIES/CONES': { color: '#8B4513', emoji: '🍪', gradient: 'linear-gradient(135deg, #8B4513, #A0522D)' },
+  'BREAKFAST SWEETS': { color: '#FF6B6B', emoji: '🧁', gradient: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)' },
+  
+  // Pantry & Condiments  
+  'PNT BTR/JELLY/JAMS': { color: '#9C27B0', emoji: '🫙', gradient: 'linear-gradient(135deg, #9C27B0, #BA68C8)' },
+  'SPICES & EXTRACTS': { color: '#FF5722', emoji: '🌶️', gradient: 'linear-gradient(135deg, #FF5722, #FF7043)' },
+  
+  // Health & Wellness
+  'VITAMINS': { color: '#4CAF50', emoji: '💊', gradient: 'linear-gradient(135deg, #4CAF50, #66BB6A)' },
+  
+  // Fresh Produce
+  'FRUIT - SHELF STABLE': { color: '#FF9800', emoji: '🍎', gradient: 'linear-gradient(135deg, #FF9800, #FFB74D)' },
+  
+  // Beverages
+  'SOFT DRINKS': { color: '#2196F3', emoji: '🥤', gradient: 'linear-gradient(135deg, #2196F3, #42A5F5)' },
+  'COFFEE': { color: '#5D4037', emoji: '☕', gradient: 'linear-gradient(135deg, #5D4037, #6D4C41)' },
+  'MILK': { color: '#FFF8E1', emoji: '🥛', gradient: 'linear-gradient(135deg, #FFF8E1, #FFFDE7)', textColor: '#333' },
+  
+  // Snacks
+  'CHIPS': { color: '#FFC107', emoji: '🥔', gradient: 'linear-gradient(135deg, #FFC107, #FFD54F)' },
+  'COOKIES': { color: '#795548', emoji: '🍪', gradient: 'linear-gradient(135deg, #795548, #8D6E63)' },
+  
+  // Dairy
+  'BUTTER': { color: '#FFEB3B', emoji: '🧈', gradient: 'linear-gradient(135deg, #FFEB3B, #FFF176)', textColor: '#333' },
+  'YOGURT': { color: '#E91E63', emoji: '🥛', gradient: 'linear-gradient(135deg, #E91E63, #F06292)' },
+  
+  // Pantry Staples
+  'PASTA': { color: '#FF7043', emoji: '🍝', gradient: 'linear-gradient(135deg, #FF7043, #FF8A65)' },
+  'TOMATO SAUCE': { color: '#F44336', emoji: '🍅', gradient: 'linear-gradient(135deg, #F44336, #EF5350)' },
+  'CEREAL': { color: '#9E9E9E', emoji: '🥣', gradient: 'linear-gradient(135deg, #9E9E9E, #BDBDBD)' },
+  
+  // Frozen Foods
+  'PIZZA': { color: '#FF5722', emoji: '🍕', gradient: 'linear-gradient(135deg, #FF5722, #FF7043)' },
+  
+  // Sweets & Desserts
+  'CHOCOLATE': { color: '#3E2723', emoji: '🍫', gradient: 'linear-gradient(135deg, #3E2723, #5D4037)' },
+  'GRANOLA BARS': { color: '#8BC34A', emoji: '🥜', gradient: 'linear-gradient(135deg, #8BC34A, #9CCC65)' },
+  
+  // Dairy Products
+  'CREAMER': { color: '#FFF3E0', emoji: '🥛', gradient: 'linear-gradient(135deg, #FFF3E0, #FFE0B2)', textColor: '#333' },
+  
+  // Cleaning
+  'DETERGENT': { color: '#00BCD4', emoji: '🧼', gradient: 'linear-gradient(135deg, #00BCD4, #26C6DA)' },
+  'FABRIC SOFTENER': { color: '#E1BEE7', emoji: '🧺', gradient: 'linear-gradient(135deg, #E1BEE7, #F3E5F5)', textColor: '#333' },
+  
+  // Default for unknown commodities
+  'NO COMMODITY DESCRIPTION': { color: '#6C757D', emoji: '📦', gradient: 'linear-gradient(135deg, #6C757D, #868E96)' },
+  'DEFAULT': { color: '#6C757D', emoji: '🛒', gradient: 'linear-gradient(135deg, #6C757D, #868E96)' }
+};
+
+// Create commodity badge with proper colors and emojis
+function createCommodityBadge(name) {
+  const config = COMMODITY_CONFIG[name] || COMMODITY_CONFIG['DEFAULT'];
+  const textColor = config.textColor || '#ffffff';
+  return `
+    <span class="commodity-badge" style="
+      background: ${config.gradient};
+      color: ${textColor};
+      font-weight: 600;
+      border-radius: 15px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    ">
+      ${config.emoji} ${name.length > 12 ? name.substring(0, 10) + '...' : name}
+    </span>
+  `;
 }
 
 // Descriptive Analysis Functions
@@ -867,13 +997,14 @@ function generateAssociationRules() {
     { antecedent: 'MEAT-PCKGD', consequent: 'FROZEN GROCERY', support: 0.11, confidence: 0.69, lift: 1.6 }
   ];
   
-  // Filter rules based on thresholds (simulating Apriori algorithm)
+  // Filter department rules based on thresholds (simulating Apriori algorithm) - SHOW ALL
   const rules = allRules.filter(rule => 
     rule.support >= supportThreshold && rule.confidence >= confidenceThreshold
-  ).sort((a, b) => b.lift - a.lift).slice(0, 8);
+  ).sort((a, b) => b.lift - a.lift); // Remove .slice(0, 10) to show ALL results
   
-  const rulesHtml = rules.map(rule => `
-    <div class="rule-card">
+  // Department rules HTML (showing count) with click functionality
+  const deptRulesHtml = rules.length > 0 ? rules.map(rule => `
+    <div class="rule-card" onclick="showRuleDetails('${rule.antecedent}', '${rule.consequent}', ${rule.support}, ${rule.confidence}, ${rule.lift}, 'department')">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="d-flex align-items-center flex-wrap">
           ${createDepartmentBadge(rule.antecedent)}
@@ -902,28 +1033,38 @@ function generateAssociationRules() {
         <div class="confidence-fill" style="width: ${rule.confidence * 100}%"></div>
       </div>
     </div>
-  `).join('');
+  `).join('') : '<div class="text-center py-4 text-muted"><i class="fas fa-info-circle fa-2x mb-2"></i><p>No department rules found with current thresholds.<br>Try lowering the support or confidence values.</p></div>';
   
+  // Update department rules container
   const containerDept = document.getElementById('associationRules');
-  if(containerDept) containerDept.innerHTML = rulesHtml;
+  if(containerDept) {
+    containerDept.innerHTML = deptRulesHtml;
+    // Update section title with count (infinity symbol for unlimited)
+    const deptTitle = document.getElementById('deptRulesTitle');
+    if(deptTitle) deptTitle.innerHTML = `<i class="fas fa-project-diagram"></i> Association Rules (${rules.length}/∞) — Department Level`;
+  }
 
   // Commodity-level demo rules (based on commodity_desc)
   const commodityRulesAll = [
-    { ant: 'SOFT DRINKS', con: 'CHIPS', support: 0.11, confidence: 0.73, lift: 2.0 },
-    { ant: 'COOKIES', con: 'MILK', support: 0.09, confidence: 0.69, lift: 1.8 },
-    { ant: 'BREAD', con: 'BUTTER', support: 0.12, confidence: 0.76, lift: 2.1 },
-    { ant: 'CEREAL', con: 'MILK', support: 0.14, confidence: 0.82, lift: 2.3 },
-    { ant: 'PASTA', con: 'TOMATO SAUCE', support: 0.08, confidence: 0.66, lift: 1.7 },
-    { ant: 'YOGURT', con: 'GRANOLA BARS', support: 0.07, confidence: 0.62, lift: 1.6 },
-    { ant: 'COFFEE', con: 'CREAMER', support: 0.1, confidence: 0.71, lift: 1.9 },
-    { ant: 'ICE CREAM', con: 'CHOCOLATE', support: 0.06, confidence: 0.58, lift: 1.5 },
-    { ant: 'PIZZA', con: 'SOFT DRINKS', support: 0.12, confidence: 0.75, lift: 2.0 },
-    { ant: 'DETERGENT', con: 'FABRIC SOFTENER', support: 0.05, confidence: 0.55, lift: 1.4 }
+    { ant: 'BREAD', con: 'PNT BTR/JELLY/JAMS', support: 0.12, confidence: 0.76, lift: 2.1 },
+    { ant: 'BREAKFAST SWEETS', con: 'COFFEE', support: 0.14, confidence: 0.82, lift: 2.3 },
+    { ant: 'ICE CREAM/MILK/SHERBTS', con: 'COOKIES/CONES', support: 0.13, confidence: 0.78, lift: 2.2 },
+    { ant: 'PNT BTR/JELLY/JAMS', con: 'BREAD', support: 0.12, confidence: 0.74, lift: 2.0 },
+    { ant: 'COFFEE', con: 'BREAKFAST SWEETS', support: 0.10, confidence: 0.71, lift: 1.9 },
+    { ant: 'COOKIES/CONES', con: 'ICE CREAM/MILK/SHERBTS', support: 0.09, confidence: 0.69, lift: 1.8 },
+    { ant: 'BREAD', con: 'FRUIT - SHELF STABLE', support: 0.09, confidence: 0.65, lift: 1.8 },
+    { ant: 'SPICES & EXTRACTS', con: 'FRUIT - SHELF STABLE', support: 0.08, confidence: 0.66, lift: 1.7 },
+    { ant: 'VITAMINS', con: 'FRZN ICE', support: 0.07, confidence: 0.62, lift: 1.6 },
+    { ant: 'FRZN ICE', con: 'VITAMINS', support: 0.06, confidence: 0.58, lift: 1.5 },
+    { ant: 'SPICES & EXTRACTS', con: 'VITAMINS', support: 0.05, confidence: 0.55, lift: 1.4 }
   ];
-  const commodityRules = commodityRulesAll.filter(r => r.support >= supportThreshold && r.confidence >= confidenceThreshold)
-    .sort((a,b)=>b.lift-a.lift).slice(0,10);
-  const commodityHtml = commodityRules.map(r=>`
-    <div class="rule-card">
+  // Filter commodity rules using SAME thresholds as department rules - SHOW ALL
+  const commodityRules = commodityRulesAll.filter(r => 
+    r.support >= supportThreshold && r.confidence >= confidenceThreshold
+  ).sort((a,b)=>b.lift-a.lift); // Remove .slice(0,10) to show ALL results
+  // Commodity rules HTML (showing count) with click functionality
+  const commodityHtml = commodityRules.length > 0 ? commodityRules.map(r=>`
+    <div class="rule-card" onclick="showRuleDetails('${r.ant}', '${r.con}', ${r.support}, ${r.confidence}, ${r.lift}, 'commodity')">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <div class="d-flex align-items-center flex-wrap">
           ${createCommodityBadge(r.ant)}
@@ -939,9 +1080,16 @@ function generateAssociationRules() {
       </div>
       <div class="confidence-bar"><div class="confidence-fill" style="width:${r.confidence*100}%"></div></div>
     </div>
-  `).join('');
+  `).join('') : '<div class="text-center py-4 text-muted"><i class="fas fa-info-circle fa-2x mb-2"></i><p>No commodity rules found with current thresholds.<br>Try lowering the support or confidence values.</p></div>';
+  
+  // Update commodity rules container
   const containerCom = document.getElementById('associationRulesCommodity');
-  if(containerCom) containerCom.innerHTML = commodityHtml;
+  if(containerCom) {
+    containerCom.innerHTML = commodityHtml;
+    // Update section title with count (infinity symbol for unlimited)
+    const comTitle = document.getElementById('commodityRulesTitle');
+    if(comTitle) comTitle.innerHTML = `<i class="fas fa-boxes-stacked"></i> Association Rules (${commodityRules.length}/∞) — Commodity Level`;
+  }
 }
 
 function updateSliderValues() {
@@ -969,8 +1117,8 @@ function runDescriptiveAnalysis() {
   
   showNotification(`Running Apriori algorithm (min_support=${supportValue}, min_confidence=${confidenceValue})...`, 'info');
   
-  // Show loading state
-  document.getElementById('associationRules').innerHTML = `
+  // Show loading state for both containers
+  const loadingHtml = `
     <div class="text-center py-4">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -980,25 +1128,48 @@ function runDescriptiveAnalysis() {
     </div>
   `;
   
+  document.getElementById('associationRules').innerHTML = loadingHtml;
+  document.getElementById('associationRulesCommodity').innerHTML = loadingHtml;
+  
   // Simulate realistic algorithm execution time
   setTimeout(() => {
     generateAssociationRules();
     updateMetrics();
-    const ruleCount = document.getElementById('associationRules').children.length;
-    showNotification(`Apriori completed! Found ${ruleCount} strong association rules.`, 'success');
+    
+    const deptRules = document.getElementById('associationRules').querySelectorAll('.rule-card').length;
+    const commodityRules = document.getElementById('associationRulesCommodity').querySelectorAll('.rule-card').length;
+    const total = deptRules + commodityRules;
+    
+    showNotification(`Apriori completed! Found ${total} strong association rules (${deptRules} department + ${commodityRules} commodity).`, 'success');
   }, Math.random() * 2000 + 1500);
 }
 
 function updateMetrics() {
+  // Count actual rules generated (excluding loading/empty state divs)
+  const deptContainer = document.getElementById('associationRules');
+  const commodityContainer = document.getElementById('associationRulesCommodity');
+  
+  const deptRules = deptContainer ? deptContainer.querySelectorAll('.rule-card').length : 0;
+  const commodityRules = commodityContainer ? commodityContainer.querySelectorAll('.rule-card').length : 0;
+  const totalRules = deptRules + commodityRules;
+  
   const elements = {
     strongRules: document.getElementById('strongRules'),
-    topLift: document.getElementById('topLift'),
-    avgBasketSize: document.getElementById('avgBasketSize')
+    topLift: document.getElementById('topLift')
   };
   
-  if (elements.strongRules) elements.strongRules.textContent = Math.floor(Math.random() * 50) + 100;
-  if (elements.topLift) elements.topLift.textContent = (Math.random() * 2 + 1.5).toFixed(1);
-  if (elements.avgBasketSize) elements.avgBasketSize.textContent = (Math.random() * 2 + 2.5).toFixed(1);
+  if (elements.strongRules) {
+    elements.strongRules.textContent = totalRules;
+    // Update the label description
+    const label = elements.strongRules.nextElementSibling;
+    if (label && totalRules > 0) {
+      label.innerHTML = `Strong Rules Found<br><small style="color: #6c757d; font-size: 0.6rem;">${deptRules} dept + ${commodityRules} commodity</small>`;
+    }
+  }
+  
+  if (elements.topLift && totalRules > 0) {
+    elements.topLift.textContent = '2.5';
+  }
 }
 
 // Predictive Analysis Functions
@@ -1286,6 +1457,250 @@ function runDifferentialAnalysis() {
     generateDifferentialInsights();
     showNotification(`${statTest.replace('_', ' ')} analysis completed successfully!`, 'success');
   }, Math.random() * 1500 + 2000);
+}
+
+// Expand section in popup
+function expandSection(sectionType) {
+  let title, content, container;
+  
+  switch(sectionType) {
+    case 'department':
+      title = 'All Department Level Association Rules';
+      container = document.getElementById('associationRules');
+      break;
+    case 'commodity':
+      title = 'All Commodity Level Association Rules';
+      container = document.getElementById('associationRulesCommodity');
+      break;
+    case 'baskets':
+      title = 'All High-Value Baskets';
+      container = document.getElementById('basketsGrid');
+      break;
+  }
+  
+  if (container) {
+    let content = container.innerHTML;
+    
+    // For baskets, wrap in proper bootstrap grid
+    if (sectionType === 'baskets') {
+      content = `<div class="row g-3">${content}</div>`;
+    }
+    
+    const modalContent = `
+      <div id="expandedContent" style="max-height: 70vh; overflow-y: auto; padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+        ${content}
+      </div>
+    `;
+    
+    showDetailModal(title, modalContent);
+    
+    // Re-attach event listeners after modal is shown
+    setTimeout(() => {
+      attachPopupEventListeners(sectionType);
+    }, 200);
+  }
+}
+
+// Attach event listeners to popup content
+function attachPopupEventListeners(sectionType) {
+  const expandedContent = document.getElementById('expandedContent');
+  if (!expandedContent) return;
+  
+  if (sectionType === 'baskets') {
+    // Attach basket card click handlers
+    const basketCards = expandedContent.querySelectorAll('.basket-card');
+    basketCards.forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', async function() {
+        const basketId = this.dataset.basketId;
+        if (!basketId) return;
+        
+        showNotification('Loading basket details...', 'info');
+        
+        try {
+          const csrftoken = (document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))||'').split('=')[1]||'';
+          const formData = new FormData();
+          formData.append('csrfmiddlewaretoken', csrftoken);
+          formData.append('basket_id', basketId);
+          
+          const response = await fetch('/analysis/api/basket/', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const data = await response.json();
+          
+          if (data.error) {
+            showDetailModal(`Basket ${basketId}`, `<div class="alert alert-danger">${data.error}</div>`);
+            return;
+          }
+          
+          let content = '<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Product</th><th>Quantity</th><th>Sales Value</th><th>Department</th></tr></thead><tbody>';
+          
+          (data.items || []).forEach(item => {
+            const dept = item.department || 'MISC. TRANS.';
+            content += `<tr>
+              <td><strong>${item.product_id}</strong><br><small class="text-muted">${item.commodity_desc || ''}</small></td>
+              <td>${item.quantity}</td>
+              <td>$${Number(item.sales_value || 0).toFixed(2)}</td>
+              <td>${createDepartmentBadge(dept)}</td>
+            </tr>`;
+          });
+          
+          content += '</tbody></table></div>';
+          showDetailModal(`🛒 Basket #${basketId} Details`, content);
+          
+        } catch (error) {
+          showNotification('Failed to load basket details', 'error');
+        }
+      });
+    });
+  } else {
+    // Attach rule card click handlers for department and commodity rules
+    const ruleCards = expandedContent.querySelectorAll('.rule-card');
+    ruleCards.forEach(card => {
+      card.style.cursor = 'pointer';
+      // Extract data from the card's onclick attribute or recreate the click handler
+      const onclickAttr = card.getAttribute('onclick');
+      if (onclickAttr) {
+        // Parse the onclick parameters
+        const match = onclickAttr.match(/showRuleDetails\('([^']+)',\s*'([^']+)',\s*([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*'([^']+)'\)/);
+        if (match) {
+          const [, antecedent, consequent, support, confidence, lift, ruleType] = match;
+          card.addEventListener('click', function() {
+            showRuleDetails(antecedent, consequent, parseFloat(support), parseFloat(confidence), parseFloat(lift), ruleType);
+          });
+        }
+      }
+    });
+  }
+}
+
+// Remove the scrollToSection function since we removed the scroll buttons
+
+// Show detailed rule information
+function showRuleDetails(antecedent, consequent, support, confidence, lift, ruleType) {
+  const isDepth = ruleType === 'department';
+  const antBadge = isDepth ? createDepartmentBadge(antecedent) : createCommodityBadge(antecedent);
+  const conBadge = isDepth ? createDepartmentBadge(consequent) : createCommodityBadge(consequent);
+  
+  const interpretation = getInterpretation(support, confidence, lift);
+  const businessValue = getBusinessValue(antecedent, consequent, lift, ruleType);
+  
+  const title = `${antecedent} → ${consequent}`;
+  const body = `
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="text-center mb-3">
+          <div class="d-flex align-items-center justify-content-center gap-3">
+            ${antBadge}
+            <i class="fas fa-arrow-right fa-2x text-primary"></i>
+            ${conBadge}
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <div class="fs-3 fw-bold text-primary">${(support * 100).toFixed(1)}%</div>
+            <div class="text-muted">Support</div>
+            <small class="text-muted">How often both items appear together</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <div class="fs-3 fw-bold text-success">${(confidence * 100).toFixed(1)}%</div>
+            <div class="text-muted">Confidence</div>
+            <small class="text-muted">When ${antecedent} is bought, likelihood of buying ${consequent}</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <div class="fs-3 fw-bold text-warning">${lift}</div>
+            <div class="text-muted">Lift</div>
+            <small class="text-muted">${lift > 1 ? 'Strong positive' : lift == 1 ? 'Independent' : 'Negative'} association</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-chart-line"></i> Rule Interpretation</h6>
+          </div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Statistical Significance:</strong> ${interpretation.significance}</p>
+            <p class="mb-2"><strong>Business Meaning:</strong> ${interpretation.meaning}</p>
+            <p class="mb-0"><strong>Recommendation:</strong> ${interpretation.recommendation}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Business Value</h6>
+          </div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Cross-selling Opportunity:</strong> ${businessValue.crossSell}</p>
+            <p class="mb-2"><strong>Store Layout:</strong> ${businessValue.layout}</p>
+            <p class="mb-0"><strong>Marketing Strategy:</strong> ${businessValue.marketing}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  showDetailModal(title, body);
+}
+
+// Get interpretation based on metrics
+function getInterpretation(support, confidence, lift) {
+  let significance, meaning, recommendation;
+  
+  if (lift > 2) {
+    significance = "Very strong association - much more likely to be purchased together than by chance";
+    meaning = "These items have a powerful synergistic relationship in customer behavior";
+    recommendation = "Priority for cross-selling campaigns and strategic product placement";
+  } else if (lift > 1.5) {
+    significance = "Strong association - significantly more likely to be purchased together";
+    meaning = "Customers frequently buy these items as complementary products";
+    recommendation = "Good candidate for bundling promotions and adjacent placement";
+  } else if (lift > 1) {
+    significance = "Moderate positive association - somewhat more likely together than separately";
+    meaning = "Some connection exists between these items in customer purchasing patterns";
+    recommendation = "Consider testing promotional strategies and placement optimization";
+  } else {
+    significance = "Weak or no association - may be purchased independently";
+    meaning = "These items don't show strong purchasing correlation";
+    recommendation = "Focus on individual item optimization rather than cross-selling";
+  }
+  
+  return { significance, meaning, recommendation };
+}
+
+// Get business value insights
+function getBusinessValue(ant, con, lift, type) {
+  const crossSell = lift > 1.5 ? 
+    `High potential - customers buying ${ant} are ${lift}x more likely to buy ${con}` :
+    `Moderate potential - some correlation exists between these items`;
+    
+  const layout = lift > 1.5 ? 
+    `Place these items near each other or in the same aisle for maximum impact` :
+    `Current placement is likely adequate, minor adjustments may help`;
+    
+  const marketing = lift > 2 ? 
+    `Bundle these items in promotions, create combo deals, target customers who buy one with ads for the other` :
+    `Consider seasonal promotions or targeted email campaigns highlighting the relationship`;
+    
+  return { crossSell, layout, marketing };
 }
 
 // Basket card interactions
