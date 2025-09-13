@@ -560,11 +560,22 @@
 
       <!-- Association Rules -->
       <div class="chart-container">
-        <h5><i class="fas fa-project-diagram"></i> Association Rules (Top 10)</h5>
+        <h5><i class="fas fa-project-diagram"></i> Association Rules (Top 10) — Department Level</h5>
         <div class="association-rules-container" id="associationRules">
           <div class="text-center py-3 text-muted">
             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
             <p>Click "Run Apriori Algorithm" to generate association rules...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commodity-level Rules -->
+      <div class="chart-container">
+        <h5><i class="fas fa-boxes-stacked"></i> Association Rules (Top 10) — Commodity Level</h5>
+        <div class="association-rules-container" id="associationRulesCommodity">
+          <div class="text-center py-3 text-muted">
+            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+            <p>Click "Run Apriori Algorithm" to generate commodity-level rules...</p>
           </div>
         </div>
       </div>
@@ -827,6 +838,11 @@ function createDepartmentBadge(department) {
   `;
 }
 
+// Create commodity badge (simple chip style)
+function createCommodityBadge(name){
+  return `<span class="badge" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color:#fff; font-weight:600; border-radius: 999px; padding:.25rem .5rem;">${name}</span>`;
+}
+
 // Descriptive Analysis Functions
 function loadDescriptiveAnalysis() {
   generateAssociationRules();
@@ -837,6 +853,7 @@ function generateAssociationRules() {
   const supportThreshold = parseFloat(document.getElementById('supportSlider')?.value || 0.05);
   const confidenceThreshold = parseFloat(document.getElementById('confidenceSlider')?.value || 0.6);
   
+  // Department-level demo rules
   const allRules = [
     { antecedent: 'PORK', consequent: 'GROCERY', support: 0.15, confidence: 0.85, lift: 2.3 },
     { antecedent: 'SEAFOOD', consequent: 'FROZEN GROCERY', support: 0.12, confidence: 0.78, lift: 2.1 },
@@ -887,7 +904,44 @@ function generateAssociationRules() {
     </div>
   `).join('');
   
-  document.getElementById('associationRules').innerHTML = rulesHtml;
+  const containerDept = document.getElementById('associationRules');
+  if(containerDept) containerDept.innerHTML = rulesHtml;
+
+  // Commodity-level demo rules (based on commodity_desc)
+  const commodityRulesAll = [
+    { ant: 'SOFT DRINKS', con: 'CHIPS', support: 0.11, confidence: 0.73, lift: 2.0 },
+    { ant: 'COOKIES', con: 'MILK', support: 0.09, confidence: 0.69, lift: 1.8 },
+    { ant: 'BREAD', con: 'BUTTER', support: 0.12, confidence: 0.76, lift: 2.1 },
+    { ant: 'CEREAL', con: 'MILK', support: 0.14, confidence: 0.82, lift: 2.3 },
+    { ant: 'PASTA', con: 'TOMATO SAUCE', support: 0.08, confidence: 0.66, lift: 1.7 },
+    { ant: 'YOGURT', con: 'GRANOLA BARS', support: 0.07, confidence: 0.62, lift: 1.6 },
+    { ant: 'COFFEE', con: 'CREAMER', support: 0.1, confidence: 0.71, lift: 1.9 },
+    { ant: 'ICE CREAM', con: 'CHOCOLATE', support: 0.06, confidence: 0.58, lift: 1.5 },
+    { ant: 'PIZZA', con: 'SOFT DRINKS', support: 0.12, confidence: 0.75, lift: 2.0 },
+    { ant: 'DETERGENT', con: 'FABRIC SOFTENER', support: 0.05, confidence: 0.55, lift: 1.4 }
+  ];
+  const commodityRules = commodityRulesAll.filter(r => r.support >= supportThreshold && r.confidence >= confidenceThreshold)
+    .sort((a,b)=>b.lift-a.lift).slice(0,10);
+  const commodityHtml = commodityRules.map(r=>`
+    <div class="rule-card">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center flex-wrap">
+          ${createCommodityBadge(r.ant)}
+          <span class="rule-arrow">→</span>
+          ${createCommodityBadge(r.con)}
+        </div>
+        <div class="text-muted small">Lift: <strong style="color:#28a745;">${r.lift}</strong></div>
+      </div>
+      <div class="row g-2 text-center">
+        <div class="col-4"><div class="small text-muted">Support</div><div class="fw-bold">${(r.support*100).toFixed(1)}%</div></div>
+        <div class="col-4"><div class="small text-muted">Confidence</div><div class="fw-bold">${(r.confidence*100).toFixed(1)}%</div></div>
+        <div class="col-4"><div class="small text-muted">Lift</div><div class="fw-bold">${r.lift}</div></div>
+      </div>
+      <div class="confidence-bar"><div class="confidence-fill" style="width:${r.confidence*100}%"></div></div>
+    </div>
+  `).join('');
+  const containerCom = document.getElementById('associationRulesCommodity');
+  if(containerCom) containerCom.innerHTML = commodityHtml;
 }
 
 function updateSliderValues() {
