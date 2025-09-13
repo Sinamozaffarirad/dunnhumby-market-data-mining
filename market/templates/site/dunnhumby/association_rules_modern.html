@@ -1,0 +1,857 @@
+{% extends "site/base_modern.html" %}
+{% block title %}Association Rules Mining - Market Intelligence Platform{% endblock %}
+
+{% block extrahead %}
+<style>
+    .mining-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+        color: white;
+        padding: var(--space-xl) 0;
+        margin: calc(var(--space-xl) * -1) calc(var(--space-md) * -1) var(--space-xl);
+        border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .mining-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="25" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="25" cy="75" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="2" fill="rgba(255,255,255,0.1)"/><line x1="25" y1="25" x2="75" y2="25" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><line x1="25" y1="75" x2="75" y2="75" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><line x1="25" y1="25" x2="25" y2="75" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><line x1="75" y1="25" x2="75" y2="75" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .parameter-panel {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .parameter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-lg);
+    }
+    
+    .parameter-item {
+        position: relative;
+    }
+    
+    .parameter-slider {
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--gray-200);
+        outline: none;
+        -webkit-appearance: none;
+        margin: var(--space-md) 0;
+    }
+    
+    .parameter-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary);
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .parameter-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary);
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .parameter-value {
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    .mining-controls {
+        display: flex;
+        gap: var(--space-md);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .mine-btn {
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: var(--border-radius-lg);
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .mine-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .mine-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .mine-btn.mining {
+        background: var(--gray-400);
+    }
+    
+    .rules-container {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+    
+    .rules-header {
+        background: var(--gray-50);
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+    }
+    
+    .rules-stats {
+        display: flex;
+        gap: var(--space-lg);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .stat-badge {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .rules-grid {
+        padding: var(--space-lg);
+    }
+    
+    .rule-card {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        transition: var(--transition-slow);
+        position: relative;
+    }
+    
+    .rule-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .rule-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        border-radius: 2px 0 0 2px;
+    }
+    
+    .rule-card.high-confidence::before {
+        background: var(--success);
+    }
+    
+    .rule-card.medium-confidence::before {
+        background: var(--warning);
+    }
+    
+    .rule-card.low-confidence::before {
+        background: var(--gray-400);
+    }
+    
+    .rule-visual {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        margin-bottom: var(--space-md);
+        flex-wrap: wrap;
+    }
+    
+    .antecedent, .consequent {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .itemset {
+        display: flex;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+    }
+    
+    .item-tag {
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .antecedent .item-tag {
+        background: var(--info);
+    }
+    
+    .consequent .item-tag {
+        background: var(--success);
+    }
+    
+    .rule-arrow {
+        font-size: 1.5rem;
+        color: var(--primary);
+        font-weight: bold;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .rule-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: var(--space-md);
+        background: white;
+        padding: var(--space-md);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-200);
+    }
+    
+    .metric {
+        text-align: center;
+    }
+    
+    .metric-label {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gray-900);
+    }
+    
+    .support-value { color: var(--info); }
+    .confidence-value { color: var(--success); }
+    .lift-value { color: var(--primary); }
+    
+    .no-rules {
+        text-align: center;
+        padding: var(--space-2xl);
+        color: var(--gray-500);
+    }
+    
+    .no-rules i {
+        font-size: 3rem;
+        margin-bottom: var(--space-md);
+        opacity: 0.5;
+    }
+    
+    .explanation-panel {
+        background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .explanation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--space-lg);
+        margin-top: var(--space-lg);
+    }
+    
+    .explanation-item {
+        background: white;
+        padding: var(--space-lg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-200);
+    }
+    
+    .explanation-item h4 {
+        color: var(--primary);
+        margin-bottom: var(--space-sm);
+    }
+    
+    .visualization-panel {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+    }
+    
+    @media (max-width: 768px) {
+        .parameter-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .rule-visual {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .rule-metrics {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .mining-controls {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Mining Header -->
+<div class="mining-header text-center">
+    <div style="position: relative; z-index: 2;">
+        <h1 class="display-5 fw-bold mb-3">
+            <i class="fas fa-network-wired me-3"></i>
+            Association Rules Mining
+        </h1>
+        <p class="lead mb-4">Discover hidden patterns and relationships in customer purchasing behavior</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <span class="badge bg-light text-primary px-3 py-2">Apriori Algorithm</span>
+            <span class="badge bg-light text-primary px-3 py-2">Market Basket Analysis</span>
+            <span class="badge bg-light text-primary px-3 py-2">ML-Powered</span>
+        </div>
+    </div>
+</div>
+
+<!-- Parameter Configuration -->
+<div class="parameter-panel animate-on-scroll">
+    <h3 class="h4 fw-bold mb-4">
+        <i class="fas fa-sliders-h me-2"></i>
+        Mining Parameters
+    </h3>
+    
+    <div class="parameter-grid">
+        <div class="parameter-item">
+            <label class="form-label fw-semibold">Minimum Support</label>
+            <input type="range" class="parameter-slider" id="supportSlider" 
+                   min="0.001" max="0.1" step="0.001" value="0.005">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Frequency threshold (0.1% - 10%)</small>
+                <span class="parameter-value" id="supportValue">0.5%</span>
+            </div>
+        </div>
+        
+        <div class="parameter-item">
+            <label class="form-label fw-semibold">Minimum Confidence</label>
+            <input type="range" class="parameter-slider" id="confidenceSlider" 
+                   min="0.1" max="1.0" step="0.05" value="0.6">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Rule reliability (10% - 100%)</small>
+                <span class="parameter-value" id="confidenceValue">60%</span>
+            </div>
+        </div>
+        
+        <div class="parameter-item">
+            <label class="form-label fw-semibold">Minimum Lift</label>
+            <input type="range" class="parameter-slider" id="liftSlider" 
+                   min="1.0" max="5.0" step="0.1" value="1.2">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Correlation strength (1.0 - 5.0)</small>
+                <span class="parameter-value" id="liftValue">1.2</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mining-controls">
+        <button class="mine-btn" id="mineRulesBtn">
+            <i class="fas fa-magic me-2"></i>
+            Mine Association Rules
+        </button>
+        
+        <div class="d-flex align-items-center gap-3">
+            <label class="form-check-label fw-semibold" for="autoMine">
+                <input class="form-check-input me-2" type="checkbox" id="autoMine">
+                Auto-mine on parameter change
+            </label>
+        </div>
+        
+        <select class="form-select" id="dataSource" style="width: auto;">
+            <option value="all">All Transactions</option>
+            <option value="recent">Last 30 Days</option>
+            <option value="seasonal">Seasonal Data</option>
+        </select>
+    </div>
+</div>
+
+<!-- Progress Indicator -->
+<div class="progress mb-4" id="miningProgress" style="display: none;">
+    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+         role="progressbar" style="width: 0%"></div>
+</div>
+
+<!-- Visualization Panel -->
+<div class="visualization-panel animate-on-scroll" id="visualizationPanel" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="h5 fw-bold mb-0">
+            <i class="fas fa-project-diagram me-2"></i>
+            Rules Network Visualization
+        </h3>
+        <div class="btn-group" role="group">
+            <button class="btn btn-outline-primary btn-sm active" data-view="network">Network</button>
+            <button class="btn btn-outline-primary btn-sm" data-view="matrix">Matrix</button>
+        </div>
+    </div>
+    <div id="networkViz" style="height: 400px; border: 1px solid var(--gray-200); border-radius: var(--border-radius);"></div>
+</div>
+
+<!-- Results Container -->
+<div class="rules-container animate-on-scroll">
+    <div class="rules-header">
+        <h3 class="h5 fw-bold mb-0">
+            <i class="fas fa-list-alt me-2"></i>
+            Discovered Association Rules
+        </h3>
+        <div class="rules-stats">
+            <span class="stat-badge" id="rulesCount">0 Rules</span>
+            <select class="form-select form-select-sm" id="sortRules" style="width: auto;">
+                <option value="lift">Sort by Lift</option>
+                <option value="confidence">Sort by Confidence</option>
+                <option value="support">Sort by Support</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="rules-grid" id="rulesGrid">
+        <div class="no-rules">
+            <i class="fas fa-search"></i>
+            <h4>No Rules Generated Yet</h4>
+            <p class="mb-0">Configure your parameters above and click "Mine Association Rules" to discover patterns in your data.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Explanation Panel -->
+<div class="explanation-panel animate-on-scroll">
+    <h3 class="h5 fw-bold mb-3">
+        <i class="fas fa-lightbulb me-2"></i>
+        Understanding Association Rules
+    </h3>
+    <p class="text-muted mb-4">Association rule mining helps identify relationships between different items purchased together, enabling better product recommendations and inventory planning.</p>
+    
+    <div class="explanation-grid">
+        <div class="explanation-item">
+            <h4><i class="fas fa-chart-bar me-2"></i>Support</h4>
+            <p class="mb-0 small">Measures how frequently the itemset appears in the dataset. Higher support means the combination is more common.</p>
+        </div>
+        
+        <div class="explanation-item">
+            <h4><i class="fas fa-percentage me-2"></i>Confidence</h4>
+            <p class="mb-0 small">Indicates the reliability of the rule. Shows the likelihood of buying the consequent when the antecedent is purchased.</p>
+        </div>
+        
+        <div class="explanation-item">
+            <h4><i class="fas fa-arrow-up me-2"></i>Lift</h4>
+            <p class="mb-0 small">Measures the strength of association. Lift > 1 indicates positive correlation, < 1 indicates negative correlation.</p>
+        </div>
+        
+        <div class="explanation-item">
+            <h4><i class="fas fa-bullseye me-2"></i>Applications</h4>
+            <p class="mb-0 small">Product recommendations, cross-selling strategies, store layout optimization, and promotional bundling.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+class AssociationRulesMiner {
+    constructor() {
+        this.rules = [];
+        this.miningInProgress = false;
+        this.autoMine = false;
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.updateParameterDisplays();
+    }
+    
+    bindEvents() {
+        // Parameter sliders
+        document.getElementById('supportSlider').addEventListener('input', (e) => {
+            this.updateParameterDisplay('support', e.target.value);
+            if (this.autoMine) this.debounced_mine();
+        });
+        
+        document.getElementById('confidenceSlider').addEventListener('input', (e) => {
+            this.updateParameterDisplay('confidence', e.target.value);
+            if (this.autoMine) this.debounced_mine();
+        });
+        
+        document.getElementById('liftSlider').addEventListener('input', (e) => {
+            this.updateParameterDisplay('lift', e.target.value);
+            if (this.autoMine) this.debounced_mine();
+        });
+        
+        // Mine button
+        document.getElementById('mineRulesBtn').addEventListener('click', () => {
+            this.mineRules();
+        });
+        
+        // Auto-mine checkbox
+        document.getElementById('autoMine').addEventListener('change', (e) => {
+            this.autoMine = e.target.checked;
+            if (this.autoMine && this.rules.length === 0) {
+                this.mineRules();
+            }
+        });
+        
+        // Sort dropdown
+        document.getElementById('sortRules').addEventListener('change', (e) => {
+            this.sortRules(e.target.value);
+        });
+        
+        // Data source change
+        document.getElementById('dataSource').addEventListener('change', () => {
+            if (this.autoMine) this.debounced_mine();
+        });
+        
+        // Debounced mining function
+        this.debounced_mine = this.debounce(() => this.mineRules(), 1000);
+    }
+    
+    updateParameterDisplays() {
+        this.updateParameterDisplay('support', document.getElementById('supportSlider').value);
+        this.updateParameterDisplay('confidence', document.getElementById('confidenceSlider').value);
+        this.updateParameterDisplay('lift', document.getElementById('liftSlider').value);
+    }
+    
+    updateParameterDisplay(param, value) {
+        const element = document.getElementById(param + 'Value');
+        switch (param) {
+            case 'support':
+                element.textContent = (parseFloat(value) * 100).toFixed(1) + '%';
+                break;
+            case 'confidence':
+                element.textContent = (parseFloat(value) * 100).toFixed(0) + '%';
+                break;
+            case 'lift':
+                element.textContent = parseFloat(value).toFixed(1);
+                break;
+        }
+    }
+    
+    async mineRules() {
+        if (this.miningInProgress) return;
+        
+        this.miningInProgress = true;
+        this.showMiningProgress(true);
+        
+        const btn = document.getElementById('mineRulesBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner me-2"></div>Mining Rules...';
+        btn.disabled = true;
+        btn.classList.add('mining');
+        
+        try {
+            const params = this.getMiningParameters();
+            
+            // Simulate mining process with progress
+            await this.simulateMiningWithProgress();
+            
+            // Generate mock rules
+            this.rules = this.generateMockRules(params);
+            
+            this.renderRules();
+            this.updateVisualization();
+            
+            showNotification(`Successfully mined ${this.rules.length} association rules!`, 'success');
+            
+        } catch (error) {
+            showNotification('Error mining association rules', 'error');
+            console.error(error);
+        } finally {
+            this.miningInProgress = false;
+            this.showMiningProgress(false);
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.classList.remove('mining');
+        }
+    }
+    
+    getMiningParameters() {
+        return {
+            minSupport: parseFloat(document.getElementById('supportSlider').value),
+            minConfidence: parseFloat(document.getElementById('confidenceSlider').value),
+            minLift: parseFloat(document.getElementById('liftSlider').value),
+            dataSource: document.getElementById('dataSource').value
+        };
+    }
+    
+    async simulateMiningWithProgress() {
+        const progressBar = document.querySelector('#miningProgress .progress-bar');
+        const steps = ['Loading data...', 'Finding frequent itemsets...', 'Generating rules...', 'Calculating metrics...', 'Filtering results...'];
+        
+        for (let i = 0; i < steps.length; i++) {
+            const progress = ((i + 1) / steps.length) * 100;
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = steps[i];
+            
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+    }
+    
+    generateMockRules(params) {
+        const products = [
+            'Milk', 'Bread', 'Eggs', 'Cheese', 'Apples', 'Bananas', 'Chicken', 'Beef', 'Rice', 'Pasta',
+            'Tomatoes', 'Onions', 'Carrots', 'Potatoes', 'Yogurt', 'Cereal', 'Coffee', 'Tea', 'Butter', 'Flour'
+        ];
+        
+        const rules = [];
+        const numRules = Math.floor(Math.random() * 25) + 15; // 15-40 rules
+        
+        for (let i = 0; i < numRules; i++) {
+            const antecedentSize = Math.random() > 0.7 ? 2 : 1;
+            const consequentSize = Math.random() > 0.8 ? 2 : 1;
+            
+            const antecedent = this.selectRandomProducts(products, antecedentSize);
+            let consequent = this.selectRandomProducts(products, consequentSize);
+            
+            // Ensure no overlap
+            consequent = consequent.filter(p => !antecedent.includes(p));
+            if (consequent.length === 0) continue;
+            
+            const support = Math.max(params.minSupport, Math.random() * 0.3);
+            const confidence = Math.max(params.minConfidence, Math.random() * 0.4 + 0.6);
+            const lift = Math.max(params.minLift, Math.random() * 3 + 1);
+            
+            if (support >= params.minSupport && 
+                confidence >= params.minConfidence && 
+                lift >= params.minLift) {
+                
+                rules.push({
+                    id: `rule_${i}`,
+                    antecedent,
+                    consequent,
+                    support,
+                    confidence,
+                    lift,
+                    transactions: Math.floor(support * 10000),
+                    strength: this.calculateStrength(support, confidence, lift)
+                });
+            }
+        }
+        
+        return rules.sort((a, b) => b.lift - a.lift);
+    }
+    
+    selectRandomProducts(products, count) {
+        const selected = [];
+        const available = [...products];
+        
+        for (let i = 0; i < count && available.length > 0; i++) {
+            const index = Math.floor(Math.random() * available.length);
+            selected.push(available.splice(index, 1)[0]);
+        }
+        
+        return selected;
+    }
+    
+    calculateStrength(support, confidence, lift) {
+        return (support * 0.2 + confidence * 0.4 + (lift - 1) * 0.4);
+    }
+    
+    renderRules() {
+        const container = document.getElementById('rulesGrid');
+        const countElement = document.getElementById('rulesCount');
+        
+        countElement.textContent = `${this.rules.length} Rules`;
+        
+        if (this.rules.length === 0) {
+            container.innerHTML = `
+                <div class="no-rules">
+                    <i class="fas fa-search"></i>
+                    <h4>No Rules Found</h4>
+                    <p class="mb-0">Try adjusting your parameters to discover more patterns.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = this.rules.map(rule => this.createRuleCard(rule)).join('');
+        
+        // Animate cards
+        container.querySelectorAll('.rule-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+        // Show visualization
+        document.getElementById('visualizationPanel').style.display = 'block';
+    }
+    
+    createRuleCard(rule) {
+        const confidenceClass = rule.confidence > 0.8 ? 'high-confidence' : 
+                               rule.confidence > 0.6 ? 'medium-confidence' : 'low-confidence';
+        
+        return `
+            <div class="rule-card ${confidenceClass}">
+                <div class="rule-visual">
+                    <div class="antecedent">
+                        <div class="mb-2 small fw-semibold text-info">IF PURCHASED</div>
+                        <div class="itemset">
+                            ${rule.antecedent.map(item => `
+                                <span class="item-tag">${item}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="rule-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    
+                    <div class="consequent">
+                        <div class="mb-2 small fw-semibold text-success">THEN LIKELY TO BUY</div>
+                        <div class="itemset">
+                            ${rule.consequent.map(item => `
+                                <span class="item-tag">${item}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rule-metrics">
+                    <div class="metric">
+                        <div class="metric-label">Support</div>
+                        <div class="metric-value support-value">${(rule.support * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Confidence</div>
+                        <div class="metric-value confidence-value">${(rule.confidence * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Lift</div>
+                        <div class="metric-value lift-value">${rule.lift.toFixed(2)}</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Transactions</div>
+                        <div class="metric-value">${rule.transactions.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    sortRules(criteria) {
+        switch (criteria) {
+            case 'lift':
+                this.rules.sort((a, b) => b.lift - a.lift);
+                break;
+            case 'confidence':
+                this.rules.sort((a, b) => b.confidence - a.confidence);
+                break;
+            case 'support':
+                this.rules.sort((a, b) => b.support - a.support);
+                break;
+        }
+        
+        this.renderRules();
+    }
+    
+    updateVisualization() {
+        // Simple network visualization placeholder
+        const vizContainer = document.getElementById('networkViz');
+        
+        // Create a simple D3.js-style network visualization
+        vizContainer.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center h-100">
+                <div class="text-center">
+                    <i class="fas fa-project-diagram fa-3x text-primary mb-3"></i>
+                    <h5>Network Visualization</h5>
+                    <p class="text-muted mb-0">Interactive rule network visualization</p>
+                    <small class="text-muted">Showing relationships between ${this.rules.length} rules</small>
+                </div>
+            </div>
+        `;
+        
+        // Here you would implement actual network visualization using D3.js or similar
+    }
+    
+    showMiningProgress(show) {
+        const progressElement = document.getElementById('miningProgress');
+        if (show) {
+            progressElement.style.display = 'block';
+            progressElement.querySelector('.progress-bar').style.width = '0%';
+        } else {
+            setTimeout(() => {
+                progressElement.style.display = 'none';
+            }, 500);
+        }
+    }
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.rulesMiner = new AssociationRulesMiner();
+});
+</script>
+{% endblock %}

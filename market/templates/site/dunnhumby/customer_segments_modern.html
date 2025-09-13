@@ -1,0 +1,1085 @@
+{% extends "site/base_modern.html" %}
+{% block title %}Customer Segmentation | Analytics{% endblock %}
+{% block content %}
+
+<style>
+.segments-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 4rem 2rem 2rem;
+    border-radius: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.segments-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><circle cx="200" cy="200" r="3" fill="rgba(255,255,255,0.1)"/><circle cx="800" cy="300" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="400" cy="600" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="700" cy="700" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="100" cy="800" r="3" fill="rgba(255,255,255,0.1)"/></svg>');
+    pointer-events: none;
+}
+
+.segments-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.segments-hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.segment-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.segment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.segment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.segment-card:hover::before {
+    transform: scaleX(1);
+}
+
+.segment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.segment-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 0.75rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.customer-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.customer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.rfm-scores {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 0.75rem;
+}
+
+.rfm-score {
+    text-align: center;
+}
+
+.rfm-score-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.rfm-score-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    letter-spacing: 0.05em;
+}
+
+.customer-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.customer-metric {
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    background: var(--surface-light);
+    border-radius: 0.5rem;
+}
+
+.metric-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.guide-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+}
+
+.guide-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.guide-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--surface-light);
+    border-radius: 0.75rem;
+}
+
+.guide-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.guide-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.filters-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-group {
+    margin-bottom: 1rem;
+}
+
+.filter-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.segment-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-pill {
+    padding: 0.5rem 1rem;
+    background: var(--surface-light);
+    border: 1px solid var(--border-color);
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-pill:hover,
+.filter-pill.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg, var(--surface-light) 25%, rgba(255,255,255,0.2) 50%, var(--surface-light) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+    border-radius: 0.5rem;
+    height: 1rem;
+    margin: 0.25rem 0;
+}
+
+@keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.analysis-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    color: white;
+}
+
+.action-btn.secondary {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.action-btn.secondary:hover {
+    color: var(--text-primary);
+    border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .segments-hero {
+        padding: 2rem 1rem;
+    }
+    
+    .segments-hero h1 {
+        font-size: 2rem;
+    }
+    
+    .segment-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .customer-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<!-- Hero Section -->
+<div class="segments-hero fade-in">
+    <h1><i class="fas fa-users-line"></i> Customer Segmentation</h1>
+    <p>Advanced RFM analysis and customer behavioral insights for targeted marketing strategies</p>
+</div>
+
+<!-- Analysis Actions -->
+<div class="analysis-actions fade-in">
+    <button class="action-btn" onclick="refreshSegmentData()">
+        <i class="fas fa-sync-alt"></i> Refresh Data
+    </button>
+    <button class="action-btn secondary" onclick="exportSegmentData()">
+        <i class="fas fa-download"></i> Export Analysis
+    </button>
+    <button class="action-btn secondary" onclick="openAdvancedFilters()">
+        <i class="fas fa-sliders-h"></i> Advanced Filters
+    </button>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section fade-in">
+    <div class="row g-4">
+        <div class="col-12 col-md-6">
+            <div class="filter-group">
+                <div class="filter-label">Filter by Segment</div>
+                <div class="segment-filter-pills">
+                    <div class="filter-pill active" data-segment="all">All Segments</div>
+                    <div class="filter-pill" data-segment="champions">Champions</div>
+                    <div class="filter-pill" data-segment="loyal">Loyal</div>
+                    <div class="filter-pill" data-segment="potential">Potential</div>
+                    <div class="filter-pill" data-segment="new">New</div>
+                    <div class="filter-pill" data-segment="attention">Need Attention</div>
+                    <div class="filter-pill" data-segment="risk">At Risk</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="filter-group">
+                <div class="filter-label">Search Customer</div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="customerSearch" placeholder="Enter household ID...">
+                    <button class="btn btn-outline-primary" onclick="searchCustomer()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Segments Overview -->
+<div class="section-container fade-in">
+    <div class="section-header">
+        <h2><i class="fas fa-layer-group"></i> RFM Segments Overview</h2>
+        <div class="section-badge" id="segmentCount">
+            {% if segments %}{{ segments|length }} active segments{% else %}Loading segments...{% endif %}
+        </div>
+    </div>
+    
+    <div class="row g-4" id="segmentsGrid">
+        {% if segments %}
+            {% for s in segments %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="segment-card" data-segment="{{ s.rfm_segment }}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="segment-badge">
+                            <i class="fas fa-tag"></i>
+                            {{ s.rfm_segment }}
+                        </div>
+                        <div class="text-end">
+                            <div class="h3 mb-0 text-primary">{{ s.count }}</div>
+                            <small class="text-muted">customers</small>
+                        </div>
+                    </div>
+                    
+                    <div class="segment-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${{ s.avg_spend|floatformat:0 }}K</div>
+                            <div class="stat-label">Avg. Spend</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ s.avg_transactions|floatformat:0 }}</div>
+                            <div class="stat-label">Avg. Transactions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                    <h4>No Segment Data Available</h4>
+                    <p class="text-muted">Generate customer segments in the Data Management section to view analysis.</p>
+                    <a href="/analysis/data-management/" class="btn btn-primary">
+                        <i class="fas fa-cog"></i> Go to Data Management
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Customer Analysis -->
+<div class="section-container fade-in">
+    <div class="section-header">
+        <h2><i class="fas fa-user-chart"></i> Recent Customer Analysis</h2>
+        <div class="section-badge">
+            {% if recent_customers %}Detailed RFM profiles with spending behavior{% else %}Loading customers...{% endif %}
+        </div>
+    </div>
+    
+    <div class="row g-4" id="customersGrid">
+        {% if recent_customers %}
+            {% for c in recent_customers %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="customer-card" data-household="{{ c.household_key }}">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-user-circle text-primary"></i>
+                            <span class="fw-bold">{{ c.household_key }}</span>
+                        </div>
+                        <span class="segment-badge" style="font-size: 0.8rem;">{{ c.rfm_segment }}</span>
+                    </div>
+                    
+                    <div class="rfm-scores">
+                        <div class="rfm-score">
+                            <div class="rfm-score-value">{{ c.recency_score }}</div>
+                            <div class="rfm-score-label">RECENCY</div>
+                        </div>
+                        <div class="rfm-score">
+                            <div class="rfm-score-value">{{ c.frequency_score }}</div>
+                            <div class="rfm-score-label">FREQUENCY</div>
+                        </div>
+                        <div class="rfm-score">
+                            <div class="rfm-score-value">{{ c.monetary_score }}</div>
+                            <div class="rfm-score-label">MONETARY</div>
+                        </div>
+                    </div>
+                    
+                    <div class="customer-metrics">
+                        <div class="customer-metric">
+                            <div class="metric-value">${{ c.total_spend|floatformat:0 }}</div>
+                            <div class="metric-label">Total Spend</div>
+                        </div>
+                        <div class="customer-metric">
+                            <div class="metric-value">{{ c.total_transactions }}</div>
+                            <div class="metric-label">Transactions</div>
+                        </div>
+                        <div class="customer-metric">
+                            <div class="metric-value">${{ c.avg_basket_value|floatformat:0 }}</div>
+                            <div class="metric-label">Avg. Basket</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end mt-2">
+                        <small class="text-muted">Updated {{ c.updated_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                    <h4>No Customer Data Available</h4>
+                    <p class="text-muted">Customer profiles will appear here once segmentation data is generated.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- RFM Segmentation Guide -->
+<div class="section-container fade-in">
+    <div class="section-header">
+        <h2><i class="fas fa-book-open"></i> RFM Segmentation Guide</h2>
+        <div class="section-badge">Strategic insights for customer relationship management</div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-12 col-lg-4">
+            <div class="guide-card">
+                <div class="guide-header">
+                    <i class="fas fa-crown text-warning"></i>
+                    High-Value Segments
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #10b981; color: white;">Champions</div>
+                    <div class="guide-description">
+                        High value, high frequency, recent customers — your best customers who buy often and recently.
+                    </div>
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #3b82f6; color: white;">Loyal Customers</div>
+                    <div class="guide-description">
+                        High frequency and monetary value — reliable revenue source with consistent purchasing behavior.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+            <div class="guide-card">
+                <div class="guide-header">
+                    <i class="fas fa-chart-line text-info"></i>
+                    Growth Opportunities
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #06b6d4; color: white;">Potential Loyalists</div>
+                    <div class="guide-description">
+                        Recent customers with good frequency — nurture these relationships to build long-term loyalty.
+                    </div>
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #8b5cf6; color: white;">New Customers</div>
+                    <div class="guide-description">
+                        Recent but low frequency/monetary — focus on onboarding and first-purchase experience.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+            <div class="guide-card">
+                <div class="guide-header">
+                    <i class="fas fa-triangle-exclamation text-danger"></i>
+                    At-Risk Segments
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #f59e0b; color: white;">Need Attention</div>
+                    <div class="guide-description">
+                        Good customers who haven't purchased recently — implement re-engagement campaigns immediately.
+                    </div>
+                </div>
+                <div class="guide-item">
+                    <div class="guide-badge" style="background: #ef4444; color: white;">At Risk</div>
+                    <div class="guide-description">
+                        Were good customers but declining — urgent intervention required to prevent churn.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+class CustomerSegmentation {
+    constructor() {
+        this.csrfToken = this.getCsrfToken();
+        this.currentFilter = 'all';
+        this.init();
+    }
+
+    getCsrfToken() {
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    init() {
+        this.bindEvents();
+        this.animateOnScroll();
+        this.initializeFilters();
+        
+        // Add loading states
+        this.showLoadingState();
+        
+        // Simulate data loading for demo
+        setTimeout(() => {
+            this.hideLoadingState();
+        }, 1000);
+    }
+
+    bindEvents() {
+        // Segment card clicks
+        document.querySelectorAll('.segment-card').forEach(card => {
+            card.addEventListener('click', (e) => this.handleSegmentClick(e));
+        });
+
+        // Customer card clicks
+        document.querySelectorAll('.customer-card').forEach(card => {
+            card.addEventListener('click', (e) => this.handleCustomerClick(e));
+        });
+
+        // Filter pills
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.addEventListener('click', (e) => this.handleFilterClick(e));
+        });
+
+        // Search functionality
+        document.getElementById('customerSearch').addEventListener('input', 
+            this.debounce((e) => this.handleSearch(e.target.value), 300));
+    }
+
+    initializeFilters() {
+        // Set up filter functionality
+        this.updateFilterCounts();
+    }
+
+    handleSegmentClick(e) {
+        const segment = e.currentTarget.dataset.segment;
+        this.loadSegmentDetails(segment);
+    }
+
+    async loadSegmentDetails(segment) {
+        try {
+            this.showNotification('Loading segment details...', 'info');
+            
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', this.csrfToken);
+            formData.append('rfm_segment', segment);
+
+            const response = await fetch('/analysis/api/segment/', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                this.showModal(`Segment ${segment}`, `<div class="alert alert-danger">${data.error}</div>`);
+                return;
+            }
+
+            const metrics = data.metrics || {};
+            const households = data.top_households || [];
+
+            let content = `
+                <div class="row g-4 mb-4">
+                    <div class="col-3 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">${metrics.customers || 0}</div>
+                            <div class="metric-label">Customers</div>
+                        </div>
+                    </div>
+                    <div class="col-3 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">$${Number(metrics.avg_spend || 0).toLocaleString()}</div>
+                            <div class="metric-label">Avg Spend</div>
+                        </div>
+                    </div>
+                    <div class="col-3 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">${Number(metrics.avg_txns || 0).toFixed(1)}</div>
+                            <div class="metric-label">Avg Transactions</div>
+                        </div>
+                    </div>
+                    <div class="col-3 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">$${Number(metrics.avg_basket || 0).toFixed(2)}</div>
+                            <div class="metric-label">Avg Basket</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (households.length > 0) {
+                content += `
+                    <h5 class="mb-3"><i class="fas fa-users"></i> Top Households in ${segment}</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Household</th>
+                                    <th>Total Spend</th>
+                                    <th>Transactions</th>
+                                    <th>Avg Basket</th>
+                                    <th>RFM Score</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                households.forEach(h => {
+                    content += `
+                        <tr>
+                            <td><strong>${h.household_key}</strong></td>
+                            <td>$${Number(h.total_spend || 0).toLocaleString()}</td>
+                            <td>${h.total_transactions || 0}</td>
+                            <td>$${Number(h.avg_basket_value || 0).toFixed(2)}</td>
+                            <td>${h.recency_score || '-'}-${h.frequency_score || '-'}-${h.monetary_score || '-'}</td>
+                            <td>${new Date(h.updated_at || '').toLocaleDateString()}</td>
+                        </tr>
+                    `;
+                });
+
+                content += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            this.showModal(`${segment} Segment Details`, content);
+            this.hideNotification();
+        } catch (error) {
+            console.error('Error loading segment details:', error);
+            this.showNotification('Failed to load segment details', 'error');
+        }
+    }
+
+    handleCustomerClick(e) {
+        const household = e.currentTarget.dataset.household;
+        this.loadCustomerDetails(household);
+    }
+
+    async loadCustomerDetails(household) {
+        try {
+            this.showNotification('Loading customer details...', 'info');
+            
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', this.csrfToken);
+            formData.append('household_key', household);
+
+            const response = await fetch('/analysis/api/household/', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                this.showModal(`Household ${household}`, `<div class="alert alert-danger">${data.error}</div>`);
+                return;
+            }
+
+            const segment = data.segment || {};
+            const transactions = data.recent_transactions || [];
+
+            let content = `
+                <div class="row g-4 mb-4">
+                    <div class="col-4 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">${segment.rfm_segment || 'Unknown'}</div>
+                            <div class="metric-label">Segment</div>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">$${Number(segment.total_spend || 0).toLocaleString()}</div>
+                            <div class="metric-label">Total Spend</div>
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">${segment.total_transactions || 0}</div>
+                            <div class="metric-label">Transactions</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-6 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">$${Number(segment.avg_basket_value || 0).toFixed(2)}</div>
+                            <div class="metric-label">Avg Basket Value</div>
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="metric-card">
+                            <div class="metric-value">${segment.recency_score || '-'}-${segment.frequency_score || '-'}-${segment.monetary_score || '-'}</div>
+                            <div class="metric-label">RFM Score</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (transactions.length > 0) {
+                content += `
+                    <h5 class="mb-3"><i class="fas fa-shopping-cart"></i> Recent Transactions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Basket ID</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Sales Value</th>
+                                    <th>Day</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                transactions.forEach(t => {
+                    content += `
+                        <tr>
+                            <td>${t.basket_id}</td>
+                            <td>${t.product_id}${t.commodity_desc ? ' — ' + t.commodity_desc : ''}</td>
+                            <td>${t.quantity}</td>
+                            <td>$${Number(t.sales_value || 0).toFixed(2)}</td>
+                            <td>${t.day}</td>
+                        </tr>
+                    `;
+                });
+
+                content += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            this.showModal(`Customer ${household} Profile`, content);
+            this.hideNotification();
+        } catch (error) {
+            console.error('Error loading customer details:', error);
+            this.showNotification('Failed to load customer details', 'error');
+        }
+    }
+
+    handleFilterClick(e) {
+        // Remove active class from all pills
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+
+        // Add active class to clicked pill
+        e.target.classList.add('active');
+        
+        const segment = e.target.dataset.segment;
+        this.currentFilter = segment;
+        this.filterSegments(segment);
+    }
+
+    filterSegments(segment) {
+        const segmentCards = document.querySelectorAll('.segment-card');
+        const customerCards = document.querySelectorAll('.customer-card');
+
+        if (segment === 'all') {
+            segmentCards.forEach(card => card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = '');
+            customerCards.forEach(card => card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = '');
+        } else {
+            segmentCards.forEach(card => {
+                const cardSegment = card.dataset.segment.toLowerCase();
+                const shouldShow = cardSegment.includes(segment.toLowerCase());
+                card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = shouldShow ? '' : 'none';
+            });
+
+            customerCards.forEach(card => {
+                const cardSegment = card.querySelector('.segment-badge').textContent.toLowerCase();
+                const shouldShow = cardSegment.includes(segment.toLowerCase());
+                card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = shouldShow ? '' : 'none';
+            });
+        }
+
+        this.updateFilterCounts();
+    }
+
+    handleSearch(query) {
+        const customerCards = document.querySelectorAll('.customer-card');
+        
+        if (!query.trim()) {
+            customerCards.forEach(card => {
+                card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = '';
+            });
+            return;
+        }
+
+        customerCards.forEach(card => {
+            const household = card.dataset.household;
+            const shouldShow = household.toLowerCase().includes(query.toLowerCase());
+            card.closest('.col-12, .col-sm-6, .col-lg-4, .col-xl-3').style.display = shouldShow ? '' : 'none';
+        });
+    }
+
+    updateFilterCounts() {
+        // Update segment count badge
+        const visibleSegments = document.querySelectorAll('.segment-card:not([style*="display: none"])').length;
+        document.getElementById('segmentCount').textContent = `${visibleSegments} active segments`;
+    }
+
+    showLoadingState() {
+        // Add loading skeletons to empty cards
+        document.querySelectorAll('.segment-card, .customer-card').forEach(card => {
+            if (!card.dataset.loaded) {
+                const content = card.innerHTML;
+                card.innerHTML = `
+                    <div class="loading-skeleton" style="height: 20px; width: 60%; margin-bottom: 1rem;"></div>
+                    <div class="loading-skeleton" style="height: 40px; width: 100%; margin-bottom: 1rem;"></div>
+                    <div class="loading-skeleton" style="height: 15px; width: 80%;"></div>
+                `;
+                card.dataset.originalContent = content;
+            }
+        });
+    }
+
+    hideLoadingState() {
+        document.querySelectorAll('.segment-card, .customer-card').forEach(card => {
+            if (card.dataset.originalContent) {
+                card.innerHTML = card.dataset.originalContent;
+                card.dataset.loaded = 'true';
+                delete card.dataset.originalContent;
+            }
+        });
+    }
+
+    animateOnScroll() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = `${Math.random() * 0.5}s`;
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        });
+
+        document.querySelectorAll('.segment-card, .customer-card, .guide-card').forEach(card => {
+            observer.observe(card);
+        });
+    }
+
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    showModal(title, content) {
+        if (window.showDetailModal) {
+            window.showDetailModal(title, content);
+        } else {
+            alert(title + '\n\n' + content.replace(/<[^>]*>/g, ''));
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        if (window.showNotification) {
+            window.showNotification(message, type);
+        } else {
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+
+    hideNotification() {
+        if (window.hideNotification) {
+            window.hideNotification();
+        }
+    }
+}
+
+// Global functions for action buttons
+function refreshSegmentData() {
+    const segmentation = new CustomerSegmentation();
+    segmentation.showNotification('Refreshing segment data...', 'info');
+    
+    // Simulate refresh
+    setTimeout(() => {
+        segmentation.hideNotification();
+        segmentation.showNotification('Segment data refreshed successfully!', 'success');
+    }, 2000);
+}
+
+function exportSegmentData() {
+    const segmentation = new CustomerSegmentation();
+    segmentation.showNotification('Preparing export...', 'info');
+    
+    // Simulate export
+    setTimeout(() => {
+        segmentation.hideNotification();
+        segmentation.showNotification('Segment data exported to CSV!', 'success');
+    }, 1500);
+}
+
+function openAdvancedFilters() {
+    const segmentation = new CustomerSegmentation();
+    segmentation.showModal('Advanced Filters', `
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label">Minimum Spend Threshold</label>
+                <input type="number" class="form-control" placeholder="Enter minimum spend">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Date Range</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <input type="date" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <input type="date" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label">RFM Score Range</label>
+                <div class="row g-2">
+                    <div class="col-4">
+                        <select class="form-select">
+                            <option>Any R</option>
+                            <option>R: 1-2</option>
+                            <option>R: 3-4</option>
+                            <option>R: 5</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select class="form-select">
+                            <option>Any F</option>
+                            <option>F: 1-2</option>
+                            <option>F: 3-4</option>
+                            <option>F: 5</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select class="form-select">
+                            <option>Any M</option>
+                            <option>M: 1-2</option>
+                            <option>M: 3-4</option>
+                            <option>M: 5</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function searchCustomer() {
+    const query = document.getElementById('customerSearch').value;
+    if (query.trim()) {
+        const segmentation = new CustomerSegmentation();
+        segmentation.handleSearch(query);
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const segmentation = new CustomerSegmentation();
+});
+</script>
+
+{% endblock %}

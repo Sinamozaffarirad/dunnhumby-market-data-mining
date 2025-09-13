@@ -1,0 +1,875 @@
+{% extends "site/base_modern.html" %}
+{% block title %}Basket Analysis - Market Intelligence Platform{% endblock %}
+
+{% block extrahead %}
+<style>
+    .analysis-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+        color: white;
+        padding: var(--space-xl) 0;
+        margin: calc(var(--space-xl) * -1) calc(var(--space-md) * -1) var(--space-xl);
+        border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
+        position: relative;
+    }
+    
+    .filter-panel {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+        position: sticky;
+        top: 90px;
+        z-index: 100;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        text-align: center;
+        transition: var(--transition-slow);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        color: var(--gray-600);
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    
+    .chart-section {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: var(--space-xl);
+    }
+    
+    .data-table {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        background: var(--gray-50);
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+    }
+    
+    .search-input {
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .filter-badge {
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .basket-card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    
+    .basket-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .basket-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: var(--space-md);
+    }
+    
+    .basket-id {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 1.1rem;
+    }
+    
+    .basket-value {
+        font-weight: 700;
+        color: var(--success);
+        font-size: 1.25rem;
+    }
+    
+    .basket-items {
+        display: flex;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+        margin-bottom: var(--space-md);
+    }
+    
+    .item-badge {
+        background: var(--gray-100);
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        color: var(--gray-700);
+    }
+    
+    .basket-stats {
+        display: flex;
+        gap: var(--space-lg);
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+    
+    .loading-skeleton {
+        background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+    }
+    
+    @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    .modal-modern .modal-content {
+        border-radius: var(--border-radius-lg);
+        border: none;
+        box-shadow: var(--shadow-xl);
+    }
+    
+    .modal-modern .modal-header {
+        background: var(--primary);
+        color: white;
+        border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        border-bottom: none;
+    }
+    
+    .modal-modern .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .search-box {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .basket-header {
+            flex-direction: column;
+            align-items: start;
+            gap: var(--space-sm);
+        }
+        
+        .basket-stats {
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Analysis Header -->
+<div class="analysis-header text-center">
+    <h1 class="display-5 fw-bold mb-3">
+        <i class="fas fa-shopping-basket me-3"></i>
+        Shopping Basket Analysis
+    </h1>
+    <p class="lead mb-4">Deep insights into customer purchasing patterns and market basket analytics</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <span class="badge bg-light text-primary px-3 py-2">Advanced Analytics</span>
+        <span class="badge bg-light text-primary px-3 py-2">Real-time Data</span>
+        <span class="badge bg-light text-primary px-3 py-2">ML Insights</span>
+    </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel animate-on-scroll">
+    <div class="row align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Date Range</label>
+            <select class="form-select" id="dateRange">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Min Basket Value</label>
+            <input type="number" class="form-control" id="minValue" placeholder="$0" min="0" step="0.01">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Items Count</label>
+            <select class="form-select" id="itemsFilter">
+                <option value="">All baskets</option>
+                <option value="1-5">1-5 items</option>
+                <option value="6-10">6-10 items</option>
+                <option value="11+">11+ items</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">&nbsp;</label>
+            <button class="btn btn-primary-modern w-100" id="applyFilters">
+                <i class="fas fa-filter me-2"></i>Apply Filters
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Key Statistics -->
+<div class="stats-grid animate-on-scroll">
+    <div class="stat-card">
+        <div class="stat-value" id="totalBaskets">1,234</div>
+        <div class="stat-label">Total Baskets</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value" id="avgBasketValue">$45.67</div>
+        <div class="stat-label">Average Basket Value</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value" id="avgItems">7.3</div>
+        <div class="stat-label">Average Items per Basket</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value" id="totalRevenue">$56,789</div>
+        <div class="stat-label">Total Revenue</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value" id="topCategory">Grocery</div>
+        <div class="stat-label">Top Category</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="chart-section animate-on-scroll">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="h5 fw-bold mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Basket Value Distribution
+                </h3>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-primary btn-sm active" data-chart="histogram">Histogram</button>
+                    <button class="btn btn-outline-primary btn-sm" data-chart="trend">Trend</button>
+                </div>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="basketChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="chart-section animate-on-scroll">
+            <h3 class="h5 fw-bold mb-4">
+                <i class="fas fa-chart-pie me-2"></i>Category Breakdown
+            </h3>
+            <div style="height: 350px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="data-table animate-on-scroll">
+    <div class="table-header">
+        <h3 class="h5 fw-bold mb-0">
+            <i class="fas fa-table me-2"></i>Basket Details
+        </h3>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Search baskets..." id="searchInput">
+            <select class="form-select form-select-sm" id="sortBy" style="width: auto;">
+                <option value="value_desc">Value (High to Low)</option>
+                <option value="value_asc">Value (Low to High)</option>
+                <option value="items_desc">Items (Most to Least)</option>
+                <option value="items_asc">Items (Least to Most)</option>
+                <option value="date_desc">Date (Newest)</option>
+                <option value="date_asc">Date (Oldest)</option>
+            </select>
+            <span class="filter-badge" id="resultCount">Loading...</span>
+        </div>
+    </div>
+    
+    <div class="p-3">
+        <div id="basketsContainer">
+            <!-- Loading skeletons -->
+            <div class="basket-card loading-skeleton" style="height: 120px;"></div>
+            <div class="basket-card loading-skeleton" style="height: 120px;"></div>
+            <div class="basket-card loading-skeleton" style="height: 120px;"></div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" id="loadMore" style="display: none;">
+                <i class="fas fa-plus me-2"></i>Load More Baskets
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Basket Details Modal -->
+<div class="modal fade modal-modern" id="basketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-shopping-basket me-2"></i>
+                    Basket Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="basketDetails">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+class BasketAnalysis {
+    constructor() {
+        this.currentPage = 1;
+        this.basketsPerPage = 10;
+        this.totalBaskets = 0;
+        this.filteredBaskets = [];
+        this.allBaskets = [];
+        this.charts = {};
+        
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.loadBasketData();
+        this.initializeCharts();
+    }
+    
+    bindEvents() {
+        // Filter controls
+        document.getElementById('applyFilters').addEventListener('click', () => {
+            this.applyFilters();
+        });
+        
+        // Search
+        document.getElementById('searchInput').addEventListener('input', 
+            this.debounce(() => this.applyFilters(), 300)
+        );
+        
+        // Sort
+        document.getElementById('sortBy').addEventListener('change', () => {
+            this.sortBaskets();
+            this.renderBaskets();
+        });
+        
+        // Load more
+        document.getElementById('loadMore').addEventListener('click', () => {
+            this.loadMoreBaskets();
+        });
+        
+        // Chart type toggle
+        document.querySelectorAll('[data-chart]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-chart]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.updateChart(e.target.dataset.chart);
+            });
+        });
+    }
+    
+    async loadBasketData() {
+        try {
+            showLoading(true);
+            
+            // Simulate API call with realistic data
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            this.allBaskets = this.generateMockBaskets(500);
+            this.applyFilters();
+            this.updateStatistics();
+            
+        } catch (error) {
+            showNotification('Error loading basket data', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    generateMockBaskets(count) {
+        const categories = ['Grocery', 'Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books'];
+        const products = [
+            'Milk', 'Bread', 'Eggs', 'Cheese', 'Apples', 'Bananas', 'Chicken', 'Beef',
+            'Laptop', 'Phone', 'Headphones', 'Tablet', 'Camera', 'TV', 'Gaming Console',
+            'T-Shirt', 'Jeans', 'Shoes', 'Jacket', 'Hat', 'Socks', 'Dress',
+            'Garden Tools', 'Furniture', 'Decor', 'Kitchen Utensils', 'Cleaning Supplies',
+            'Basketball', 'Tennis Racket', 'Yoga Mat', 'Running Shoes', 'Dumbbells'
+        ];
+        
+        const baskets = [];
+        for (let i = 1; i <= count; i++) {
+            const itemCount = Math.floor(Math.random() * 15) + 1;
+            const items = [];
+            let totalValue = 0;
+            
+            for (let j = 0; j < itemCount; j++) {
+                const product = products[Math.floor(Math.random() * products.length)];
+                const quantity = Math.floor(Math.random() * 3) + 1;
+                const price = (Math.random() * 50) + 1;
+                const itemValue = quantity * price;
+                
+                items.push({
+                    product,
+                    quantity,
+                    price: price.toFixed(2),
+                    value: itemValue.toFixed(2)
+                });
+                
+                totalValue += itemValue;
+            }
+            
+            baskets.push({
+                id: `BKT-${String(i).padStart(6, '0')}`,
+                items,
+                totalValue: totalValue.toFixed(2),
+                itemCount: itemCount,
+                category: categories[Math.floor(Math.random() * categories.length)],
+                date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                customerType: Math.random() > 0.3 ? 'Regular' : 'Premium'
+            });
+        }
+        
+        return baskets.sort((a, b) => parseFloat(b.totalValue) - parseFloat(a.totalValue));
+    }
+    
+    applyFilters() {
+        const dateRange = document.getElementById('dateRange').value;
+        const minValue = parseFloat(document.getElementById('minValue').value) || 0;
+        const itemsFilter = document.getElementById('itemsFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - parseInt(dateRange));
+        
+        this.filteredBaskets = this.allBaskets.filter(basket => {
+            const basketDate = new Date(basket.date);
+            const matchesDate = basketDate >= cutoffDate;
+            const matchesValue = parseFloat(basket.totalValue) >= minValue;
+            const matchesItems = this.matchesItemsFilter(basket.itemCount, itemsFilter);
+            const matchesSearch = searchTerm === '' || 
+                basket.id.toLowerCase().includes(searchTerm) ||
+                basket.items.some(item => item.product.toLowerCase().includes(searchTerm));
+                
+            return matchesDate && matchesValue && matchesItems && matchesSearch;
+        });
+        
+        this.currentPage = 1;
+        this.sortBaskets();
+        this.renderBaskets();
+        this.updateResultCount();
+    }
+    
+    matchesItemsFilter(itemCount, filter) {
+        switch (filter) {
+            case '1-5': return itemCount >= 1 && itemCount <= 5;
+            case '6-10': return itemCount >= 6 && itemCount <= 10;
+            case '11+': return itemCount >= 11;
+            default: return true;
+        }
+    }
+    
+    sortBaskets() {
+        const sortBy = document.getElementById('sortBy').value;
+        
+        this.filteredBaskets.sort((a, b) => {
+            switch (sortBy) {
+                case 'value_desc':
+                    return parseFloat(b.totalValue) - parseFloat(a.totalValue);
+                case 'value_asc':
+                    return parseFloat(a.totalValue) - parseFloat(b.totalValue);
+                case 'items_desc':
+                    return b.itemCount - a.itemCount;
+                case 'items_asc':
+                    return a.itemCount - b.itemCount;
+                case 'date_desc':
+                    return new Date(b.date) - new Date(a.date);
+                case 'date_asc':
+                    return new Date(a.date) - new Date(b.date);
+                default:
+                    return 0;
+            }
+        });
+    }
+    
+    renderBaskets() {
+        const container = document.getElementById('basketsContainer');
+        const startIndex = (this.currentPage - 1) * this.basketsPerPage;
+        const endIndex = startIndex + this.basketsPerPage;
+        const basketsToShow = this.filteredBaskets.slice(0, endIndex);
+        
+        container.innerHTML = basketsToShow.map(basket => this.createBasketCard(basket)).join('');
+        
+        // Show/hide load more button
+        const loadMoreBtn = document.getElementById('loadMore');
+        if (endIndex < this.filteredBaskets.length) {
+            loadMoreBtn.style.display = 'block';
+        } else {
+            loadMoreBtn.style.display = 'none';
+        }
+        
+        // Animate new cards
+        container.querySelectorAll('.basket-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    }
+    
+    createBasketCard(basket) {
+        const topItems = basket.items.slice(0, 3);
+        const remainingCount = basket.items.length - 3;
+        
+        return `
+            <div class="basket-card" onclick="basketAnalysis.showBasketDetails('${basket.id}')">
+                <div class="basket-header">
+                    <div class="basket-id">${basket.id}</div>
+                    <div class="basket-value">$${basket.totalValue}</div>
+                </div>
+                <div class="basket-items">
+                    ${topItems.map(item => `
+                        <span class="item-badge">${item.product} (${item.quantity})</span>
+                    `).join('')}
+                    ${remainingCount > 0 ? `<span class="item-badge">+${remainingCount} more</span>` : ''}
+                </div>
+                <div class="basket-stats">
+                    <span><i class="fas fa-calendar me-1"></i>${basket.date}</span>
+                    <span><i class="fas fa-list me-1"></i>${basket.itemCount} items</span>
+                    <span><i class="fas fa-tag me-1"></i>${basket.category}</span>
+                    <span><i class="fas fa-user me-1"></i>${basket.customerType}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    loadMoreBaskets() {
+        this.currentPage++;
+        this.renderBaskets();
+    }
+    
+    updateStatistics() {
+        const totalBaskets = this.filteredBaskets.length;
+        const totalValue = this.filteredBaskets.reduce((sum, basket) => sum + parseFloat(basket.totalValue), 0);
+        const avgValue = totalBaskets > 0 ? (totalValue / totalBaskets) : 0;
+        const totalItems = this.filteredBaskets.reduce((sum, basket) => sum + basket.itemCount, 0);
+        const avgItems = totalBaskets > 0 ? (totalItems / totalBaskets) : 0;
+        
+        const categoryCount = {};
+        this.filteredBaskets.forEach(basket => {
+            categoryCount[basket.category] = (categoryCount[basket.category] || 0) + 1;
+        });
+        const topCategory = Object.keys(categoryCount).reduce((a, b) => 
+            categoryCount[a] > categoryCount[b] ? a : b, 'N/A'
+        );
+        
+        document.getElementById('totalBaskets').textContent = totalBaskets.toLocaleString();
+        document.getElementById('avgBasketValue').textContent = '$' + avgValue.toFixed(2);
+        document.getElementById('avgItems').textContent = avgItems.toFixed(1);
+        document.getElementById('totalRevenue').textContent = '$' + totalValue.toLocaleString();
+        document.getElementById('topCategory').textContent = topCategory;
+    }
+    
+    updateResultCount() {
+        document.getElementById('resultCount').textContent = 
+            `${this.filteredBaskets.length} baskets`;
+    }
+    
+    showBasketDetails(basketId) {
+        const basket = this.allBaskets.find(b => b.id === basketId);
+        if (!basket) return;
+        
+        const modalBody = document.getElementById('basketDetails');
+        modalBody.innerHTML = `
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Basket Information</h6>
+                    <table class="table table-sm">
+                        <tr><td>Basket ID:</td><td>${basket.id}</td></tr>
+                        <tr><td>Date:</td><td>${basket.date}</td></tr>
+                        <tr><td>Total Items:</td><td>${basket.itemCount}</td></tr>
+                        <tr><td>Total Value:</td><td>$${basket.totalValue}</td></tr>
+                        <tr><td>Category:</td><td>${basket.category}</td></tr>
+                        <tr><td>Customer Type:</td><td>${basket.customerType}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold">Quick Stats</h6>
+                    <div class="mb-2">
+                        <small class="text-muted">Average Item Price</small>
+                        <div class="fw-bold">$${(parseFloat(basket.totalValue) / basket.itemCount).toFixed(2)}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Most Expensive Item</small>
+                        <div class="fw-bold">$${Math.max(...basket.items.map(i => parseFloat(i.price))).toFixed(2)}</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Least Expensive Item</small>
+                        <div class="fw-bold">$${Math.min(...basket.items.map(i => parseFloat(i.price))).toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h6 class="fw-bold mb-3">Items in Basket</h6>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${basket.items.map(item => `
+                            <tr>
+                                <td>${item.product}</td>
+                                <td>${item.quantity}</td>
+                                <td>$${item.price}</td>
+                                <td>$${item.value}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('basketModal'));
+        modal.show();
+    }
+    
+    initializeCharts() {
+        this.initBasketChart();
+        this.initCategoryChart();
+    }
+    
+    initBasketChart() {
+        const ctx = document.getElementById('basketChart');
+        if (!ctx) return;
+        
+        // Create histogram data
+        const values = this.allBaskets.map(b => parseFloat(b.totalValue));
+        const bins = this.createHistogramBins(values, 20);
+        
+        this.charts.basket = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: bins.labels,
+                datasets: [{
+                    label: 'Number of Baskets',
+                    data: bins.counts,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderColor: 'rgb(99, 102, 241)',
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (context) => `$${context[0].label}`,
+                            label: (context) => `${context.parsed.y} baskets`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Basket Value Range ($)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Number of Baskets'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    initCategoryChart() {
+        const ctx = document.getElementById('categoryChart');
+        if (!ctx) return;
+        
+        const categoryData = {};
+        this.allBaskets.forEach(basket => {
+            categoryData[basket.category] = (categoryData[basket.category] || 0) + 1;
+        });
+        
+        const colors = [
+            'rgb(99, 102, 241)', 'rgb(16, 185, 129)', 'rgb(6, 182, 212)',
+            'rgb(245, 158, 11)', 'rgb(239, 68, 68)', 'rgb(139, 92, 246)'
+        ];
+        
+        this.charts.category = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData),
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    createHistogramBins(data, binCount) {
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const binSize = (max - min) / binCount;
+        
+        const bins = Array(binCount).fill(0);
+        const labels = [];
+        
+        for (let i = 0; i < binCount; i++) {
+            const binStart = min + i * binSize;
+            const binEnd = min + (i + 1) * binSize;
+            labels.push(`${binStart.toFixed(0)}-${binEnd.toFixed(0)}`);
+        }
+        
+        data.forEach(value => {
+            const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
+            bins[binIndex]++;
+        });
+        
+        return { labels, counts: bins };
+    }
+    
+    updateChart(type) {
+        // Implementation for chart type switching
+        showNotification(`Switched to ${type} view`, 'success');
+    }
+    
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.basketAnalysis = new BasketAnalysis();
+});
+</script>
+{% endblock %}
