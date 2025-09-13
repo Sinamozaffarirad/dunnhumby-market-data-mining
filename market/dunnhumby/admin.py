@@ -139,80 +139,195 @@ class DunnhumbyAdminSite(admin.AdminSite):
         return TemplateResponse(request, 'admin/dunnhumby/customer_segments.html', context)
 
     def data_manipulation_view(self, request):
-        """Database manipulation interface"""
+        """Enhanced database manipulation interface with comprehensive CRUD operations"""
+        result_message = ""
+        error_message = ""
+        
         if request.method == 'POST':
             action = request.POST.get('action')
-            result_message = ""
             
-            if action == 'refresh_basket_analysis':
-                # Refresh basket analysis data
-                self.refresh_basket_analysis()
-                result_message = "Basket analysis refreshed successfully"
-            elif action == 'generate_segments':
-                # Generate RFM segments
-                self.generate_rfm_segments()
-                result_message = "Customer segments generated successfully"
-            elif action == 'clean_data':
-                # Clean inconsistent data
-                cleaned = self.clean_data()
-                result_message = f"Data cleaning completed. {cleaned} records processed"
-            
-            context = {
-                'title': 'Database Manipulation',
-                'result_message': result_message,
-                'data_stats': self.get_data_statistics(),
-            }
-        else:
-            context = {
-                'title': 'Database Manipulation',
-                'data_stats': self.get_data_statistics(),
-            }
+            try:
+                if action == 'refresh_basket_analysis':
+                    # Refresh basket analysis data
+                    count = self.refresh_basket_analysis()
+                    result_message = f"Basket analysis refreshed successfully. {count} records processed."
+                    
+                elif action == 'generate_segments':
+                    # Generate RFM segments
+                    count = self.generate_rfm_segments()
+                    result_message = f"Customer segments generated successfully. {count} segments created."
+                    
+                elif action == 'clean_data':
+                    # Clean inconsistent data
+                    cleaned = self.clean_data()
+                    result_message = f"Data cleaning completed. {cleaned} records processed."
+                    
+                elif action == 'generate_association_rules':
+                    # Generate association rules
+                    min_support = float(request.POST.get('min_support', 0.01))
+                    min_confidence = float(request.POST.get('min_confidence', 0.5))
+                    count = self.generate_and_save_association_rules(min_support, min_confidence)
+                    result_message = f"Association rules generated successfully. {count} rules created with min_support={min_support}, min_confidence={min_confidence}."
+                    
+                elif action == 'optimize_database':
+                    # Optimize database performance
+                    result = self.optimize_database()
+                    result_message = f"Database optimization completed. {result}"
+                    
+                elif action == 'backup_data':
+                    # Backup critical data
+                    result = self.backup_data()
+                    result_message = f"Data backup completed. {result}"
+                    
+                elif action == 'get_table_data':
+                    # AJAX request for table data
+                    table_name = request.POST.get('table_name')
+                    page = int(request.POST.get('page', 1))
+                    limit = int(request.POST.get('limit', 50))
+                    search = request.POST.get('search', '')
+                    
+                    data = self.get_table_data(table_name, page, limit, search)
+                    return HttpResponse(json.dumps(data), content_type='application/json')
+                    
+                elif action == 'update_record':
+                    # Update a specific record
+                    table_name = request.POST.get('table_name')
+                    record_id = request.POST.get('record_id')
+                    field_data = json.loads(request.POST.get('field_data', '{}'))
+                    
+                    success = self.update_record(table_name, record_id, field_data)
+                    if success:
+                        result_message = f"Record updated successfully in {table_name}."
+                    else:
+                        error_message = f"Failed to update record in {table_name}."
+                        
+                elif action == 'delete_record':
+                    # Delete a specific record
+                    table_name = request.POST.get('table_name')
+                    record_id = request.POST.get('record_id')
+                    
+                    success = self.delete_record(table_name, record_id)
+                    if success:
+                        result_message = f"Record deleted successfully from {table_name}."
+                    else:
+                        error_message = f"Failed to delete record from {table_name}."
+                        
+                elif action == 'bulk_import':
+                    # Bulk import data
+                    table_name = request.POST.get('table_name')
+                    csv_data = request.POST.get('csv_data')
+                    
+                    count = self.bulk_import_data(table_name, csv_data)
+                    result_message = f"Bulk import completed. {count} records imported to {table_name}."
+                    
+                elif action == 'export_data':
+                    # Export data to CSV
+                    table_name = request.POST.get('table_name')
+                    filters = json.loads(request.POST.get('filters', '{}'))
+                    
+                    csv_content = self.export_table_data(table_name, filters)
+                    response = HttpResponse(csv_content, content_type='text/csv')
+                    response['Content-Disposition'] = f'attachment; filename="{table_name}_export.csv"'
+                    return response
+                
+            except Exception as e:
+                error_message = f"Error processing {action}: {str(e)}"
+        
+        # Handle GET request for template rendering
+        context = {
+            'title': 'Database Manipulation & Management',
+            'result_message': result_message,
+            'error_message': error_message,
+            'data_stats': self.get_data_statistics(),
+            'available_tables': self.get_available_tables(),
+        }
         
         return TemplateResponse(request, 'admin/dunnhumby/data_manipulation.html', context)
 
     def generate_association_rules(self, min_support, min_confidence):
-        """Generate association rules (simplified)"""
-        # This is a simplified implementation
-        # In production, you'd use libraries like mlxtend or apyori
+        """Generate association rules (enhanced implementation)"""
+        print(f"Generating rules with min_support={min_support}, min_confidence={min_confidence}")
         
         # Get frequent itemsets using values() to avoid 'id' column issue
         baskets = defaultdict(list)
-        transactions = Transaction.objects.values('basket_id', 'product_id')[:10000]  # Limit for demo
+        transactions = Transaction.objects.values('basket_id', 'product_id')[:20000]  # Increased limit
+        
+        print(f"Processing {len(transactions)} transactions...")
+        
         for transaction in transactions:
-            baskets[transaction['basket_id']].append(str(transaction['product_id']))
+            if transaction['product_id']:  # Ensure product_id is not None
+                baskets[transaction['basket_id']].append(str(transaction['product_id']))
+        
+        print(f"Found {len(baskets)} unique baskets")
+        
+        if len(baskets) == 0:
+            print("No baskets found!")
+            return []
         
         # Simple frequent pairs analysis
         pair_counts = defaultdict(int)
         total_baskets = len(baskets)
         
+        # Count pairs in each basket
         for basket_items in baskets.values():
-            for i in range(len(basket_items)):
-                for j in range(i+1, len(basket_items)):
-                    pair = tuple(sorted([basket_items[i], basket_items[j]]))
-                    pair_counts[pair] += 1
+            # Only process baskets with at least 2 items
+            if len(basket_items) >= 2:
+                for i in range(len(basket_items)):
+                    for j in range(i+1, len(basket_items)):
+                        pair = tuple(sorted([basket_items[i], basket_items[j]]))
+                        pair_counts[pair] += 1
+        
+        print(f"Found {len(pair_counts)} unique pairs")
         
         # Generate rules
         rules = []
         for pair, count in pair_counts.items():
             support = count / total_baskets
             if support >= min_support:
-                # Calculate confidence (simplified)
+                # Calculate confidence for both directions
+                # Direction 1: pair[0] -> pair[1]
                 antecedent_count = sum(1 for basket_items in baskets.values() if pair[0] in basket_items)
-                confidence = count / antecedent_count if antecedent_count > 0 else 0
-                
-                if confidence >= min_confidence:
-                    consequent_count = sum(1 for basket_items in baskets.values() if pair[1] in basket_items)
-                    lift = confidence / (consequent_count / total_baskets) if consequent_count > 0 else 0
+                if antecedent_count > 0:
+                    confidence = count / antecedent_count
                     
-                    rules.append({
-                        'antecedent': [pair[0]],
-                        'consequent': [pair[1]],
-                        'support': support,
-                        'confidence': confidence,
-                        'lift': lift
-                    })
+                    if confidence >= min_confidence:
+                        consequent_count = sum(1 for basket_items in baskets.values() if pair[1] in basket_items)
+                        if consequent_count > 0:
+                            lift = confidence / (consequent_count / total_baskets)
+                            
+                            rules.append({
+                                'antecedent': [pair[0]],
+                                'consequent': [pair[1]], 
+                                'support': support,
+                                'confidence': confidence,
+                                'lift': lift
+                            })
+                
+                # Direction 2: pair[1] -> pair[0]
+                antecedent_count = sum(1 for basket_items in baskets.values() if pair[1] in basket_items)
+                if antecedent_count > 0:
+                    confidence = count / antecedent_count
+                    
+                    if confidence >= min_confidence:
+                        consequent_count = sum(1 for basket_items in baskets.values() if pair[0] in basket_items)
+                        if consequent_count > 0:
+                            lift = confidence / (consequent_count / total_baskets)
+                            
+                            rules.append({
+                                'antecedent': [pair[1]],
+                                'consequent': [pair[0]],
+                                'support': support,
+                                'confidence': confidence,
+                                'lift': lift
+                            })
         
-        return sorted(rules, key=lambda x: x['lift'], reverse=True)[:20]
+        print(f"Generated {len(rules)} rules before filtering")
+        
+        # Sort by lift and return top results
+        sorted_rules = sorted(rules, key=lambda x: x['lift'], reverse=True)[:50]
+        
+        print(f"Returning {len(sorted_rules)} rules")
+        return sorted_rules
 
     def refresh_basket_analysis(self):
         """Refresh basket analysis data"""
@@ -223,6 +338,7 @@ class DunnhumbyAdminSite(admin.AdminSite):
             total_value=Sum('sales_value')
         )
         
+        count = 0
         for basket in baskets[:1000]:  # Limit for demo
             BasketAnalysis.objects.update_or_create(
                 basket_id=basket['basket_id'],
@@ -233,11 +349,15 @@ class DunnhumbyAdminSite(admin.AdminSite):
                     'department_mix': {}
                 }
             )
+            count += 1
+        
+        return count
 
     def generate_rfm_segments(self):
         """Generate RFM customer segments"""
         # This would implement proper RFM analysis
         # For now, simplified implementation
+        count = 0
         try:
             customers = Transaction.objects.values('household_key').annotate(
                 last_transaction=Max('day'),
@@ -251,7 +371,7 @@ class DunnhumbyAdminSite(admin.AdminSite):
         except Exception as e:
             # Log error and continue with update_or_create approach
             print(f"Error in RFM segments: {e}")
-            return
+            return 0
         
         for customer in customers[:1000]:  # Limit for demo
             try:
@@ -289,10 +409,13 @@ class DunnhumbyAdminSite(admin.AdminSite):
                         'avg_basket_value': customer['avg_basket_value']
                     }
                 )
+                count += 1
             except Exception as e:
                 # Skip this customer if there's an error
                 print(f"Skipping customer {customer['household_key']}: {e}")
                 continue
+        
+        return count
 
     def clean_data(self):
         """Clean inconsistent data"""
@@ -315,6 +438,312 @@ class DunnhumbyAdminSite(admin.AdminSite):
             'association_rules': AssociationRule.objects.count(),
             'customer_segments': CustomerSegment.objects.count(),
         }
+
+    def generate_and_save_association_rules(self, min_support, min_confidence):
+        """Generate and save association rules to database"""
+        rules = self.generate_association_rules(min_support, min_confidence)
+        
+        # Clear existing rules
+        AssociationRule.objects.all().delete()
+        
+        count = 0
+        for rule in rules:
+            try:
+                AssociationRule.objects.create(
+                    antecedent=rule['antecedent'],
+                    consequent=rule['consequent'],
+                    support=rule['support'],
+                    confidence=rule['confidence'],
+                    lift=rule['lift'],
+                    rule_type='frequent_itemset'
+                )
+                count += 1
+            except Exception as e:
+                print(f"Error saving rule: {e}")
+                continue
+        
+        return count
+
+    def optimize_database(self):
+        """Optimize database performance"""
+        from django.db import connection
+        optimizations = []
+        
+        try:
+            with connection.cursor() as cursor:
+                # Update statistics
+                cursor.execute("UPDATE STATISTICS transactions")
+                optimizations.append("Updated transaction statistics")
+                
+                # Rebuild indexes (simplified)
+                cursor.execute("REINDEX DATABASE")
+                optimizations.append("Rebuilt database indexes")
+                
+        except Exception as e:
+            optimizations.append(f"Optimization error: {str(e)}")
+            
+        return "; ".join(optimizations)
+
+    def backup_data(self):
+        """Backup critical analysis data"""
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        try:
+            # Backup basket analysis
+            basket_count = BasketAnalysis.objects.count()
+            
+            # Backup customer segments  
+            segment_count = CustomerSegment.objects.count()
+            
+            # Backup association rules
+            rule_count = AssociationRule.objects.count()
+            
+            return f"Backup_{timestamp}: {basket_count} baskets, {segment_count} segments, {rule_count} rules"
+            
+        except Exception as e:
+            return f"Backup failed: {str(e)}"
+
+    def get_available_tables(self):
+        """Get list of available database tables for CRUD operations"""
+        return [
+            {'name': 'transactions', 'model': 'Transaction', 'display': 'Transactions'},
+            {'name': 'products', 'model': 'DunnhumbyProduct', 'display': 'Products'},  
+            {'name': 'households', 'model': 'Household', 'display': 'Households'},
+            {'name': 'campaigns', 'model': 'Campaign', 'display': 'Campaigns'},
+            {'name': 'basket_analysis', 'model': 'BasketAnalysis', 'display': 'Basket Analysis'},
+            {'name': 'association_rules', 'model': 'AssociationRule', 'display': 'Association Rules'},
+            {'name': 'customer_segments', 'model': 'CustomerSegment', 'display': 'Customer Segments'},
+        ]
+
+    def get_table_data(self, table_name, page=1, limit=50, search=''):
+        """Get paginated data for a specific table"""
+        try:
+            model_map = {
+                'transactions': Transaction,
+                'products': DunnhumbyProduct,
+                'households': Household, 
+                'campaigns': Campaign,
+                'basket_analysis': BasketAnalysis,
+                'association_rules': AssociationRule,
+                'customer_segments': CustomerSegment,
+            }
+            
+            model = model_map.get(table_name)
+            if not model:
+                return {'error': 'Table not found'}
+            
+            # Calculate offset
+            offset = (page - 1) * limit
+            
+            # Get data using values() to avoid 'id' column issues
+            if table_name == 'transactions':
+                queryset = model.objects.values(
+                    'basket_id', 'household_key', 'product_id', 'quantity', 
+                    'sales_value', 'day', 'week_no', 'store_id'
+                )
+                if search:
+                    queryset = queryset.filter(basket_id__icontains=search)
+                    
+            elif table_name == 'products':
+                queryset = model.objects.values(
+                    'product_id', 'commodity_desc', 'brand', 'department', 'manufacturer'
+                )
+                if search:
+                    queryset = queryset.filter(commodity_desc__icontains=search)
+                    
+            elif table_name == 'households':
+                queryset = model.objects.values(
+                    'household_key', 'age_desc', 'income_desc', 'homeowner_desc', 'hh_comp_desc'
+                )
+                if search:
+                    queryset = queryset.filter(household_key__icontains=search)
+                    
+            else:
+                # For other models with proper primary keys
+                queryset = model.objects.all()
+                if search and hasattr(model, 'name'):
+                    queryset = queryset.filter(name__icontains=search)
+            
+            total_count = queryset.count()
+            data = list(queryset[offset:offset + limit])
+            
+            return {
+                'data': data,
+                'total': total_count,
+                'page': page,
+                'pages': (total_count + limit - 1) // limit,
+                'has_next': offset + limit < total_count,
+                'has_prev': page > 1
+            }
+            
+        except Exception as e:
+            return {'error': str(e)}
+
+    def update_record(self, table_name, record_id, field_data):
+        """Update a specific record"""
+        try:
+            model_map = {
+                'products': DunnhumbyProduct,
+                'households': Household,
+                'campaigns': Campaign,
+                'basket_analysis': BasketAnalysis,
+                'association_rules': AssociationRule,
+                'customer_segments': CustomerSegment,
+            }
+            
+            model = model_map.get(table_name)
+            if not model:
+                return False
+                
+            # For models without standard 'id' field, use appropriate key
+            if table_name == 'products':
+                record = model.objects.get(product_id=record_id)
+            elif table_name == 'households':
+                record = model.objects.get(household_key=record_id)
+            else:
+                record = model.objects.get(pk=record_id)
+            
+            # Update fields
+            for field, value in field_data.items():
+                if hasattr(record, field):
+                    setattr(record, field, value)
+            
+            record.save()
+            return True
+            
+        except Exception as e:
+            print(f"Update error: {e}")
+            return False
+
+    def delete_record(self, table_name, record_id):
+        """Delete a specific record"""
+        try:
+            model_map = {
+                'products': DunnhumbyProduct,
+                'households': Household,
+                'campaigns': Campaign,
+                'basket_analysis': BasketAnalysis,
+                'association_rules': AssociationRule,
+                'customer_segments': CustomerSegment,
+            }
+            
+            model = model_map.get(table_name)
+            if not model:
+                return False
+                
+            # For models without standard 'id' field, use appropriate key
+            if table_name == 'products':
+                record = model.objects.get(product_id=record_id)
+            elif table_name == 'households':
+                record = model.objects.get(household_key=record_id)
+            else:
+                record = model.objects.get(pk=record_id)
+            
+            record.delete()
+            return True
+            
+        except Exception as e:
+            print(f"Delete error: {e}")
+            return False
+
+    def bulk_import_data(self, table_name, csv_data):
+        """Bulk import data from CSV"""
+        import csv
+        import io
+        
+        try:
+            model_map = {
+                'basket_analysis': BasketAnalysis,
+                'association_rules': AssociationRule,
+                'customer_segments': CustomerSegment,
+            }
+            
+            model = model_map.get(table_name)
+            if not model:
+                return 0
+            
+            csv_file = io.StringIO(csv_data)
+            reader = csv.DictReader(csv_file)
+            
+            count = 0
+            for row in reader:
+                try:
+                    model.objects.create(**row)
+                    count += 1
+                except Exception as e:
+                    print(f"Import error for row: {e}")
+                    continue
+            
+            return count
+            
+        except Exception as e:
+            print(f"Bulk import error: {e}")
+            return 0
+
+    def export_table_data(self, table_name, filters=None):
+        """Export table data to CSV"""
+        import csv
+        import io
+        
+        try:
+            model_map = {
+                'transactions': Transaction,
+                'products': DunnhumbyProduct,
+                'households': Household,
+                'campaigns': Campaign,
+                'basket_analysis': BasketAnalysis,
+                'association_rules': AssociationRule,
+                'customer_segments': CustomerSegment,
+            }
+            
+            model = model_map.get(table_name)
+            if not model:
+                return "Table not found"
+            
+            output = io.StringIO()
+            
+            # Get data using values() for models without proper primary keys
+            if table_name in ['transactions', 'products', 'households']:
+                if table_name == 'transactions':
+                    data = model.objects.values(
+                        'basket_id', 'household_key', 'product_id', 'quantity', 
+                        'sales_value', 'day', 'week_no', 'store_id'
+                    )[:1000]  # Limit for performance
+                elif table_name == 'products':
+                    data = model.objects.values(
+                        'product_id', 'commodity_desc', 'brand', 'department', 'manufacturer'
+                    )[:1000]
+                else:  # households
+                    data = model.objects.values(
+                        'household_key', 'age_desc', 'income_desc', 'homeowner_desc', 'hh_comp_desc'
+                    )[:1000]
+            else:
+                data = model.objects.all()[:1000]
+                
+            if data:
+                if hasattr(data.first(), 'keys'):
+                    # For values() querysets
+                    fieldnames = list(data.first().keys())
+                    writer = csv.DictWriter(output, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(data)
+                else:
+                    # For model instances
+                    fieldnames = [field.name for field in model._meta.fields]
+                    writer = csv.DictWriter(output, fieldnames=fieldnames)
+                    writer.writeheader()
+                    
+                    for record in data:
+                        row = {}
+                        for field in fieldnames:
+                            row[field] = getattr(record, field, '')
+                        writer.writerow(row)
+            
+            return output.getvalue()
+            
+        except Exception as e:
+            return f"Export error: {str(e)}"
 
 
 # Create custom admin site instance

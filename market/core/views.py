@@ -1,18 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, Avg
 from dunnhumby.models import Transaction, DunnhumbyProduct, Household, CustomerSegment, BasketAnalysis
 
 
 def home(request):
-    """Home page with overview statistics"""
-    context = {
-        'total_transactions': Transaction.objects.count(),
-        'total_products': DunnhumbyProduct.objects.count(),
-        'total_customers': Household.objects.count(),
-        'total_segments': CustomerSegment.objects.count(),
-    }
-    return render(request, 'core/home.html', context)
+    """Redirect root to the new public/staff analytics site."""
+    return redirect('/analysis/')
 
 
 @login_required

@@ -1,174 +1,471 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
+{% block title %}Market Analysis Platform{% endblock %}
+
 {% block extrahead %}
 {{ block.super }}
-<!-- Google Fonts -->
+
+<!-- Complete Django Admin Override CSS -->
+<style>
+/* IMMEDIATE DJANGO OVERRIDE - HIGHEST PRIORITY */
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+    box-sizing: border-box !important;
+}
+
+/* Hide Django elements immediately */
+#nav-sidebar,
+.breadcrumbs,
+div.breadcrumbs,
+#changelist-filter,
+div#changelist-filter {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Force full width content */
+#content {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+}
+
+body.admin {
+    background: #ffffff !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+}
+
+[data-theme="dark"] body.admin,
+body.theme-dark {
+    background: #111827 !important;
+}
+</style>
+
+<!-- Google Fonts - High Priority -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-<!-- Font Awesome for Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Font Awesome - Multiple CDNs for reliability -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
 
-<!-- Chart.js for Data Visualization -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
 
-<!-- Custom Market Analysis CSS -->
-<link rel="stylesheet" href="{% static 'css/market_analysis.css' %}">
+<!-- Custom Admin Override CSS -->
+<link rel="stylesheet" href="{% static 'css/custom_admin_override.css' %}">
 
-<style>
-    /* Additional custom styling for enhanced user experience */
-    .breadcrumbs {
-        background: rgba(255, 255, 255, 0.9) !important;
-        backdrop-filter: blur(10px) !important;
-        border-radius: var(--radius-md) !important;
-        padding: var(--space-md) var(--space-lg) !important;
-        margin-bottom: var(--space-xl) !important;
-        box-shadow: var(--shadow-sm) !important;
-        border: 1px solid var(--border-color) !important;
+<!-- Enhanced Theme System - Aggressive Persistence -->
+<script>
+(function() {
+    'use strict';
+    
+    // Global theme state - immediately available
+    window.CUSTOM_THEME_STATE = {
+        current: localStorage.getItem('admin.theme') || 'light',
+        initialized: false
+    };
+    
+    // Immediate theme application - before any other scripts
+    function applyThemeImmediate() {
+        const theme = window.CUSTOM_THEME_STATE.current;
+        console.log('Applying theme immediately:', theme);
+        
+        // Set attributes immediately
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.className = 'theme-' + theme;
+        
+        // Set body classes if body exists
+        if (document.body) {
+            document.body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+            document.body.classList.add('theme-' + theme);
+        }
+        
+        // Update localStorage
+        localStorage.setItem('admin.theme', theme);
+        localStorage.removeItem('django.admin.theme');
+        localStorage.removeItem('theme');
     }
     
-    .breadcrumbs a {
-        color: var(--primary-color) !important;
-        text-decoration: none !important;
-        font-weight: 500 !important;
-        transition: color 0.3s ease !important;
+    // Full theme initialization
+    function initializeTheme() {
+        try {
+            const savedTheme = localStorage.getItem('admin.theme') || 'light';
+            const theme = (savedTheme === 'dark') ? 'dark' : 'light';
+            
+            window.CUSTOM_THEME_STATE.current = theme;
+            
+            applyThemeImmediate();
+            
+            console.log('Theme system initialized:', theme);
+            window.CUSTOM_THEME_STATE.initialized = true;
+            return theme;
+        } catch (e) {
+            console.error('Theme initialization error:', e);
+            window.CUSTOM_THEME_STATE.current = 'light';
+            applyThemeImmediate();
+            return 'light';
+        }
     }
     
-    .breadcrumbs a:hover {
-        color: var(--primary-light) !important;
+    // Apply theme immediately on script load
+    applyThemeImmediate();
+    
+    // Initialize on DOM ready (multiple events for safety)
+    function setupThemeSystem() {
+        initializeTheme();
+        
+        // Aggressive monitoring - check every 100ms for the first 5 seconds
+        let checkCount = 0;
+        const aggressiveCheck = setInterval(() => {
+            const currentDataTheme = document.documentElement.getAttribute('data-theme');
+            const expectedTheme = window.CUSTOM_THEME_STATE.current;
+            
+            if (currentDataTheme !== expectedTheme) {
+                console.log('Theme drift detected, correcting:', currentDataTheme, '->', expectedTheme);
+                applyThemeImmediate();
+            }
+            
+            checkCount++;
+            if (checkCount > 50) { // 5 seconds
+                clearInterval(aggressiveCheck);
+            }
+        }, 100);
+        
+        // Long-term monitoring - check every 2 seconds
+        setInterval(() => {
+            const currentDataTheme = document.documentElement.getAttribute('data-theme');
+            const expectedTheme = window.CUSTOM_THEME_STATE.current;
+            
+            if (currentDataTheme !== expectedTheme) {
+                console.log('Long-term theme drift detected, correcting:', currentDataTheme, '->', expectedTheme);
+                applyThemeImmediate();
+            }
+        }, 2000);
     }
     
-    /* Enhanced navigation styling */
-    .module caption {
-        background: var(--gradient-primary) !important;
-        color: white !important;
-        font-weight: 600 !important;
-        padding: var(--space-lg) !important;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    // Multiple initialization points
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupThemeSystem);
+    } else {
+        setupThemeSystem();
     }
     
-    /* Data visualization enhancements */
-    .dashboard-chart {
-        background: var(--bg-secondary);
-        border-radius: var(--radius-lg);
-        padding: var(--space-xl);
-        margin-bottom: var(--space-xl);
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--border-color);
+    // Additional safety nets
+    window.addEventListener('load', initializeTheme);
+    window.addEventListener('focus', initializeTheme);
+    window.addEventListener('pageshow', initializeTheme);
+    
+    // Override any Django theme system
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const expectedTheme = window.CUSTOM_THEME_STATE.current;
+                
+                // If Django or another system changed the theme, override it
+                if (currentTheme !== expectedTheme && currentTheme !== null) {
+                    console.log('External theme change detected, overriding:', currentTheme, '->', expectedTheme);
+                    setTimeout(applyThemeImmediate, 1); // Async to avoid mutation loop
+                }
+            }
+        });
+    });
+    
+    if (document.documentElement) {
+        observer.observe(document.documentElement, { 
+            attributes: true, 
+            attributeFilter: ['data-theme', 'class'] 
+        });
     }
     
-    .chart-container {
-        position: relative;
-        height: 400px;
-        margin-top: var(--space-lg);
-    }
-    
-    /* Metric cards styling */
-    .metric-card {
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(248, 250, 252, 0.8) 100%);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        padding: var(--space-xl);
-        text-align: center;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--gradient-primary);
-    }
-    
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: var(--gradient-primary);
-        background-clip: text;
-        -webkit-background-clip: text;
-        color: transparent;
-        margin-bottom: var(--space-sm);
-    }
-    
-    .metric-label {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .metric-change {
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-top: var(--space-sm);
-        padding: var(--space-xs) var(--space-sm);
-        border-radius: var(--radius-xl);
-    }
-    
-    .metric-change.positive {
-        background: rgba(5, 150, 105, 0.1);
-        color: var(--secondary-color);
-    }
-    
-    .metric-change.negative {
-        background: rgba(220, 38, 38, 0.1);
-        color: var(--danger-color);
-    }
-</style>
+    // Expose theme control globally
+    window.setCustomTheme = function(newTheme) {
+        console.log('Setting custom theme:', newTheme);
+        window.CUSTOM_THEME_STATE.current = (newTheme === 'dark') ? 'dark' : 'light';
+        applyThemeImmediate();
+    };
+})();
+</script>
 {% endblock %}
 
 {% block footer %}
 {{ block.super }}
+
 <script>
-    // Add some interactive enhancements
+(function() {
+    'use strict';
+    
+    // Custom theme toggle system - uses global theme state
+    function setTheme(newTheme) {
+        const theme = (newTheme === 'dark') ? 'dark' : 'light';
+        
+        console.log('Setting theme via toggle:', theme);
+        
+        // Use the global theme system
+        if (window.setCustomTheme) {
+            window.setCustomTheme(theme);
+        } else {
+            // Fallback if global system not ready
+            window.CUSTOM_THEME_STATE.current = theme;
+            localStorage.setItem('admin.theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            document.body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+            document.body.classList.add('theme-' + theme);
+        }
+        
+        // Update toggle button icon
+        updateThemeIcon(theme);
+        
+        return theme;
+    }
+    
+    function updateThemeIcon(theme) {
+        const toggleBtn = document.querySelector('#custom-theme-toggle');
+        if (toggleBtn) {
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.className = '';
+                icon.classList.add('fas');
+                icon.classList.add(theme === 'dark' ? 'fa-sun' : 'fa-moon');
+            }
+        }
+    }
+    
+    function createThemeToggle() {
+        // Remove any existing toggles
+        document.querySelectorAll('#theme-toggle, #custom-theme-toggle').forEach(el => el.remove());
+        
+        const userTools = document.getElementById('user-tools');
+        if (!userTools) return;
+        
+        const currentTheme = window.CUSTOM_THEME_STATE ? window.CUSTOM_THEME_STATE.current : (document.documentElement.getAttribute('data-theme') || 'light');
+        
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'custom-theme-toggle';
+        toggleBtn.type = 'button';
+        toggleBtn.title = 'Toggle dark/light theme';
+        toggleBtn.style.cssText = `
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            margin-left: 16px;
+        `;
+        
+        toggleBtn.innerHTML = `<i class="fas ${currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>`;
+        
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const current = window.CUSTOM_THEME_STATE ? window.CUSTOM_THEME_STATE.current : (document.documentElement.getAttribute('data-theme') || 'light');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            
+            console.log('Theme toggled via button:', current, '->', newTheme);
+        });
+        
+        toggleBtn.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255, 255, 255, 0.15)';
+            this.style.transform = 'scale(1.1)';
+        });
+        
+        toggleBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'none';
+            this.style.transform = 'scale(1)';
+        });
+        
+        userTools.appendChild(toggleBtn);
+        console.log('Custom theme toggle created');
+    }
+    
+    function createNavigation() {
+        const header = document.getElementById('header');
+        if (!header) return;
+        
+        // Check if navigation already exists
+        if (document.getElementById('custom-nav')) return;
+        
+        const branding = header.querySelector('#branding');
+        if (!branding) return;
+        
+        const navMenu = document.createElement('nav');
+        navMenu.id = 'custom-nav';
+        navMenu.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-left: 40px;
+            flex: 1;
+        `;
+        
+        const currentPath = window.location.pathname;
+        const isMainAdmin = currentPath.startsWith('/admin/');
+        const isDunnhumbyAdmin = currentPath.startsWith('/dunnhumby-admin/');
+        
+        const navItems = [
+            { href: '/admin/', icon: 'fas fa-home', text: 'Main Admin', active: currentPath === '/admin/' },
+            { href: '/dunnhumby-admin/', icon: 'fas fa-chart-line', text: 'Analytics Dashboard', active: currentPath === '/dunnhumby-admin/' },
+            { href: '/dunnhumby-admin/association-rules/', icon: 'fas fa-network-wired', text: 'Association Rules', active: currentPath.includes('association-rules') },
+            { href: '/dunnhumby-admin/customer-segments/', icon: 'fas fa-users', text: 'Customer Segments', active: currentPath.includes('customer-segments') },
+            { href: '/dunnhumby-admin/data-manipulation/', icon: 'fas fa-database', text: 'Data Management', active: currentPath.includes('data-manipulation') }
+        ];
+        
+        navItems.forEach(item => {
+            const link = document.createElement('a');
+            link.href = item.href;
+            link.innerHTML = `<i class="${item.icon}"></i> ${item.text}`;
+            link.style.cssText = `
+                color: ${item.active ? '#ffffff' : 'rgba(255, 255, 255, 0.8)'};
+                text-decoration: none;
+                padding: 8px 16px;
+                border-radius: 8px;
+                transition: all 0.2s ease;
+                font-weight: ${item.active ? '600' : '500'};
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: ${item.active ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
+                border: ${item.active ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent'};
+            `;
+            
+            link.addEventListener('mouseenter', function() {
+                if (!item.active) {
+                    this.style.background = 'rgba(255, 255, 255, 0.1)';
+                    this.style.color = '#ffffff';
+                    this.style.transform = 'translateY(-1px)';
+                }
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                if (!item.active) {
+                    this.style.background = 'transparent';
+                    this.style.color = 'rgba(255, 255, 255, 0.8)';
+                    this.style.transform = 'translateY(0)';
+                }
+            });
+            
+            navMenu.appendChild(link);
+        });
+        
+        branding.parentNode.insertBefore(navMenu, branding.nextSibling);
+        console.log('Custom navigation created');
+    }
+    
+    // Initialize theme toggle
     document.addEventListener('DOMContentLoaded', function() {
-        // Add hover effects to data cards
-        const cards = document.querySelectorAll('.analysis-tool-card, .stat-card, .action-card');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-4px) scale(1.02)';
+        // Remove Django navigation elements
+        setTimeout(function() {
+            document.querySelectorAll('#nav-sidebar, .breadcrumbs, div.breadcrumbs, #changelist-filter').forEach(function(el) {
+                if (el) {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                }
+            });
+        }, 100);
+        
+        createThemeToggle();
+        createNavigation();
+        
+        // Continuously clean up Django elements
+        setInterval(function() {
+            document.querySelectorAll('#nav-sidebar, .breadcrumbs, div.breadcrumbs').forEach(function(el) {
+                if (el && el.style.display !== 'none') {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                }
             });
             
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
+            // Ensure our toggle exists
+            if (!document.getElementById('custom-theme-toggle')) {
+                createThemeToggle();
+            }
+        }, 2000);
+    });
+    
+    // Enhanced form handling with proper loading states
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('form');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = form.querySelector('button[type="submit"]:not([data-no-loading])');
+                if (submitBtn) {
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    submitBtn.disabled = true;
+                    
+                    // Safety timeout
+                    const timeout = setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        console.log('Form timeout - button restored');
+                    }, 30000);
+                    
+                    // Store for cleanup
+                    submitBtn.dataset.timeoutId = timeout;
+                }
             });
         });
         
-        // Add smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'smooth';
-        
-        // Enhanced form interactions
-        const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-                this.parentElement.style.transition = 'transform 0.2s ease';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
-        
-        // Add loading states to buttons
-        const buttons = document.querySelectorAll('.btn');
-        buttons.forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.type === 'submit') {
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                    this.disabled = true;
+        // Restore buttons on page load
+        window.addEventListener('load', function() {
+            document.querySelectorAll('button[type="submit"][disabled]').forEach(btn => {
+                if (btn.innerHTML.includes('Processing')) {
+                    const timeout = btn.dataset.timeoutId;
+                    if (timeout) clearTimeout(parseInt(timeout));
+                    
+                    btn.innerHTML = btn.dataset.originalText || 'Submit';
+                    btn.disabled = false;
                 }
             });
         });
     });
+    
+    // Enhanced card animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.metric-card, .tool-card, .chart-card');
+        
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        cards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+})();
 </script>
 {% endblock %}

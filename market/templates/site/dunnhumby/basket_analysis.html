@@ -1,0 +1,52 @@
+{% extends "site/base.html" %}
+{% block title %}Basket Analysis{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header" style="background:var(--gradient-primary); color:#fff; font-weight:700;">
+        <i class="fas fa-basket-shopping"></i> Shopping Basket Analysis
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-12">
+            <h5 class="mb-3">Top 20 Baskets by Value</h5>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead><tr><th>Basket ID</th><th>Total Items</th><th>Total Value ($)</th><th>Unique Products</th></tr></thead>
+                <tbody>
+                {% for basket in basket_stats %}
+                  <tr><td>{{ basket.basket_id }}</td><td>{{ basket.total_items }}</td><td>${{ basket.total_value|floatformat:2 }}</td><td>{{ basket.unique_products }}</td></tr>
+                {% empty %}
+                  <tr><td colspan="4">No basket data available</td></tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <h5 class="mb-3">Top 10 Products by Sales</h5>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product ID</th><th>Total Sales ($)</th><th>Total Txns</th></tr></thead>
+              <tbody>
+              {% for product in dept_analysis %}
+                <tr><td>{{ product.product_id }}</td><td>${{ product.total_sales|floatformat:2 }}</td><td>{{ product.total_transactions }}</td></tr>
+              {% empty %}<tr><td colspan="3">No product data</td></tr>{% endfor %}
+              </tbody></table></div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <h5 class="mb-3">Top 20 Products by Frequency</h5>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product ID</th><th>Frequency</th><th>Total Sales ($)</th></tr></thead>
+              <tbody>
+              {% for product in top_products %}
+                <tr><td>{{ product.product_id }}</td><td>{{ product.frequency }}</td><td>${{ product.total_sales|floatformat:2 }}</td></tr>
+              {% empty %}<tr><td colspan="3">No frequency data</td></tr>{% endfor %}
+              </tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

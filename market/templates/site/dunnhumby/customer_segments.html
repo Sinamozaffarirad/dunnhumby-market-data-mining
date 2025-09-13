@@ -1,0 +1,57 @@
+{% extends "site/base.html" %}
+{% block title %}Customer Segmentation{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header" style="background:var(--gradient-primary); color:#fff; font-weight:700;">
+        <i class="fas fa-users"></i> Customer Segmentation Dashboard
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-12">
+            <h5 class="mb-3">RFM Segments Overview</h5>
+            {% if segments %}
+            <div class="table-responsive">
+              <table class="table align-middle"><thead><tr><th>Segment</th><th>Customer Count</th><th>Avg. Spend ($)</th><th>Avg. Transactions</th></tr></thead>
+              <tbody>
+                {% for s in segments %}
+                  <tr><td><span class="badge bg-primary">{{ s.rfm_segment }}</span></td><td>{{ s.count }}</td><td>${{ s.avg_spend|floatformat:2 }}</td><td>{{ s.avg_transactions|floatformat:1 }}</td></tr>
+                {% endfor %}
+              </tbody></table>
+            </div>
+            {% else %}
+              <div class="info-box">No segments available. Generate them in Data Management.</div>
+            {% endif %}
+          </div>
+          <div class="col-12">
+            <h5 class="mb-3">Recent Customer Analysis</h5>
+            {% if recent_customers %}
+            <div class="table-responsive">
+              <table class="table align-middle"><thead><tr><th>Household</th><th>Segment</th><th>R-F-M</th><th>Total Spend</th><th>Total Txns</th><th>Avg. Basket</th><th>Updated</th></tr></thead>
+              <tbody>
+                {% for c in recent_customers %}
+                  <tr>
+                    <td>{{ c.household_key }}</td>
+                    <td><span class="badge bg-success">{{ c.rfm_segment }}</span></td>
+                    <td>{{ c.recency_score }}-{{ c.frequency_score }}-{{ c.monetary_score }}</td>
+                    <td>${{ c.total_spend|floatformat:2 }}</td>
+                    <td>{{ c.total_transactions }}</td>
+                    <td>${{ c.avg_basket_value|floatformat:2 }}</td>
+                    <td>{{ c.updated_at|date:"M d, Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody></table>
+            </div>
+            {% else %}
+              <div class="info-box">No customer data available.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

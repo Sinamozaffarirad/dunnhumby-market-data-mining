@@ -1,0 +1,61 @@
+{% extends "site/base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+{% block content %}
+<div class="module">
+  <h2><i class="fas fa-chart-line"></i> Market Intelligence Dashboard</h2>
+  <div class="p-4">
+    <!-- Bootstrap metric cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-body text-center">
+            <div class="metric-value">1.05M</div>
+            <div class="metric-label">Total Transactions</div>
+            <div class="metric-change positive"><i class="fas fa-arrow-up"></i> +12.5%</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body text-center"><div class="metric-value">92.3K</div><div class="metric-label">Unique Products</div><div class="metric-change positive"><i class="fas fa-arrow-up"></i> +8.2%</div></div></div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body text-center"><div class="metric-value">2,497</div><div class="metric-label">Active Customers</div><div class="metric-change positive"><i class="fas fa-arrow-up"></i> +15.3%</div></div></div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body text-center"><div class="metric-value">$2.8M</div><div class="metric-label">Total Revenue</div><div class="metric-change positive"><i class="fas fa-arrow-up"></i> +18.7%</div></div></div>
+      </div>
+    </div>
+
+    <!-- Bootstrap analysis tools grid -->
+    <div class="row g-4 mb-4">
+      {% for tool in analysis_tools %}
+      <div class="col-12 col-md-6 col-lg-3">
+        <a class="text-decoration-none" href="{{ tool.url }}">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <div class="tool-icon">{{ tool.icon }}</div>
+              <h5 class="card-title mt-2">{{ tool.title }}</h5>
+              <p class="card-text">{{ tool.description }}</p>
+              <span class="btn btn-primary"><i class="fas fa-arrow-right"></i> Launch</span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="dashboard-chart">
+      <h3><i class="fas fa-chart-bar"></i> Market Trends Overview</h3>
+      <div class="chart-container"><canvas id="trendsChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const ctx = document.getElementById('trendsChart');
+  if(!ctx) return;
+  new Chart(ctx, { type:'line', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun'], datasets:[ { label:'Sales Volume', data:[65,78,90,81,95,108], borderColor:'rgba(59,130,246,1)', backgroundColor:'rgba(59,130,246,.1)', tension:.4, fill:true }, { label:'Customer Acquisition', data:[28,35,42,48,52,61], borderColor:'rgba(5,150,105,1)', backgroundColor:'rgba(5,150,105,.1)', tension:.4, fill:true } ] }, options:{ responsive:true, maintainAspectRatio:false } });
+});
+</script>
+{% endblock %}

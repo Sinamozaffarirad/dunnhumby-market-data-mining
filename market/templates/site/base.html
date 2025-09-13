@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Market Analytics{% endblock %}</title>
+  <script>
+    (function(){
+      try{
+        var t = localStorage.getItem('market.theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t); // keep django key aligned even outside admin
+      }catch(e){}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <!-- Tailwind CDN (utilities only) -->
+  <script>
+    window.tailwind = {
+      config: {
+        corePlugins: { preflight: false } // keep Bootstrap defaults
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Bootstrap 5 for faster iteration -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{% static 'css/market_theme.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/market_analysis_v2.css' %}" />
+  <style>
+    .site-nav { position: sticky; top:0; z-index: 40; background: var(--gradient-primary); color:#fff; box-shadow: var(--shadow-md); }
+    .site-nav .container-fluid { display:flex; align-items:center; gap:1rem; padding: .75rem 1rem; }
+    .site-nav a { color:#fff; text-decoration:none; font-weight:600; opacity:.95; }
+    .site-nav a:hover { opacity:1; }
+    .grow { flex:1; }
+    /* Full-width content with comfortable gutters */
+    .content { width: 100%; margin: 1rem 0 2rem 0; }
+  </style>
+  {% block extrahead %}{% endblock %}
+</head>
+<body class="admin">
+  <nav class="site-nav">
+    <div class="container-fluid">
+      <a href="/analysis/" style="font-weight:800; letter-spacing:.25px;">Dunnhumby Market Analytics</a>
+      <div class="grow"></div>
+      <a href="/analysis/">Dashboard</a>
+      <a href="/analysis/association-rules/">Association Rules</a>
+      <a href="/analysis/customer-segments/">Customer Segments</a>
+      <a href="/analysis/data-management/">Data Management</a>
+      <button id="site-theme-toggle" class="theme-toggle" title="Toggle theme"><i class="icon fa-solid fa-moon"></i></button>
+    </div>
+  </nav>
+  <main class="content container-fluid px-3 px-md-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    (function(){
+      function setTheme(t){
+        document.documentElement.setAttribute('data-theme', t);
+        try { localStorage.setItem('market.theme', t); localStorage.setItem('theme', t);}catch(e){}
+        var icon = document.querySelector('#site-theme-toggle .icon');
+        if(icon) icon.className = 'icon fa-solid ' + (t==='dark' ? 'fa-sun' : 'fa-moon');
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(current);
+        var btn = document.getElementById('site-theme-toggle');
+        if(btn){ btn.addEventListener('click', function(){ setTheme((document.documentElement.getAttribute('data-theme')==='dark')?'light':'dark'); }); }
+      });
+    })();
+  </script>
+  {% block footer %}{% endblock %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
