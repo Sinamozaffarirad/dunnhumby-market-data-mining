@@ -11,42 +11,104 @@
       <div class="card-body">
         <div class="row g-4">
           <div class="col-12">
-            <h5 class="mb-3">RFM Segments Overview</h5>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h5 class="m-0">RFM Segments Overview</h5>
+              {% if segments %}<span class="badge bg-secondary">{{ segments|length }} active segments</span>{% endif %}
+            </div>
             {% if segments %}
-            <div class="table-responsive">
-              <table class="table align-middle"><thead><tr><th>Segment</th><th>Customer Count</th><th>Avg. Spend ($)</th><th>Avg. Transactions</th></tr></thead>
-              <tbody>
-                {% for s in segments %}
-                  <tr><td><span class="badge bg-primary">{{ s.rfm_segment }}</span></td><td>{{ s.count }}</td><td>${{ s.avg_spend|floatformat:2 }}</td><td>{{ s.avg_transactions|floatformat:1 }}</td></tr>
-                {% endfor %}
-              </tbody></table>
+            <div class="row g-3">
+              {% for s in segments %}
+              <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <span class="badge bg-primary">{{ s.rfm_segment }}</span>
+                      <i class="fa-solid fa-layer-group text-muted"></i>
+                    </div>
+                    <div class="fw-bold fs-5">{{ s.count }}</div>
+                    <div class="text-muted small mb-2">Customers</div>
+                    <div class="d-flex justify-content-between text-muted small">
+                      <div>Avg. Spend<br><span class="fw-semibold text-body">${{ s.avg_spend|floatformat:2 }}</span></div>
+                      <div>Avg. Txns<br><span class="fw-semibold text-body">{{ s.avg_transactions|floatformat:1 }}</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
             </div>
             {% else %}
               <div class="info-box">No segments available. Generate them in Data Management.</div>
             {% endif %}
           </div>
           <div class="col-12">
-            <h5 class="mb-3">Recent Customer Analysis</h5>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h5 class="m-0">Recent Customer Analysis</h5>
+              {% if recent_customers %}<small class="text-muted">Detailed profiles with RFM and spending behavior</small>{% endif %}
+            </div>
             {% if recent_customers %}
-            <div class="table-responsive">
-              <table class="table align-middle"><thead><tr><th>Household</th><th>Segment</th><th>R-F-M</th><th>Total Spend</th><th>Total Txns</th><th>Avg. Basket</th><th>Updated</th></tr></thead>
-              <tbody>
-                {% for c in recent_customers %}
-                  <tr>
-                    <td>{{ c.household_key }}</td>
-                    <td><span class="badge bg-success">{{ c.rfm_segment }}</span></td>
-                    <td>{{ c.recency_score }}-{{ c.frequency_score }}-{{ c.monetary_score }}</td>
-                    <td>${{ c.total_spend|floatformat:2 }}</td>
-                    <td>{{ c.total_transactions }}</td>
-                    <td>${{ c.avg_basket_value|floatformat:2 }}</td>
-                    <td>{{ c.updated_at|date:"M d, Y" }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody></table>
+            <div class="row g-3">
+              {% for c in recent_customers %}
+              <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <div class="d-flex align-items-center gap-2"><i class="fa-solid fa-user text-muted"></i><span class="fw-semibold">{{ c.household_key }}</span></div>
+                      <span class="badge bg-success">{{ c.rfm_segment }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-center my-2">
+                      <div><div class="text-muted small">RECENCY</div><div class="fw-bold fs-5">{{ c.recency_score }}</div></div>
+                      <div><div class="text-muted small">FREQUENCY</div><div class="fw-bold fs-5">{{ c.frequency_score }}</div></div>
+                      <div><div class="text-muted small">MONETARY</div><div class="fw-bold fs-5">{{ c.monetary_score }}</div></div>
+                    </div>
+                    <hr class="my-2"/>
+                    <div class="row text-center g-2 small text-muted">
+                      <div class="col-4">Total Spend<br><span class="text-body fw-semibold">${{ c.total_spend|floatformat:2 }}</span></div>
+                      <div class="col-4">Transactions<br><span class="text-body fw-semibold">{{ c.total_transactions }}</span></div>
+                      <div class="col-4">Avg. Basket<br><span class="text-body fw-semibold">${{ c.avg_basket_value|floatformat:2 }}</span></div>
+                    </div>
+                    <div class="text-end small text-muted mt-2">{{ c.updated_at|date:"M d, Y" }}</div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
             </div>
             {% else %}
               <div class="info-box">No customer data available.</div>
             {% endif %}
+          </div>
+          
+          <!-- RFM Segmentation Guide (text blocks) -->
+          <div class="col-12">
+            <h5 class="mb-3">RFM Segmentation Guide</h5>
+            <div class="row g-4">
+              <div class="col-12 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2"><i class="fa-solid fa-crown text-warning"></i><strong>High-Value Segments</strong></div>
+                    <div class="mb-2"><span class="badge bg-success">Champions</span> High value, high frequency, recent customers — your best customers.</div>
+                    <div class="mb-2"><span class="badge bg-primary">Loyal Customers</span> High frequency and monetary value — reliable revenue source.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2"><i class="fa-solid fa-chart-line text-info"></i><strong>Growth Opportunities</strong></div>
+                    <div class="mb-2"><span class="badge bg-info text-dark">Potential Loyalists</span> Recent customers with good frequency — nurture for loyalty.</div>
+                    <div class="mb-2"><span class="badge bg-purple" style="background:#8b5cf6;">New Customers</span> Recent but low frequency/monetary — onboarding opportunities.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2"><i class="fa-solid fa-triangle-exclamation text-danger"></i><strong>At-Risk Segments</strong></div>
+                    <div class="mb-2"><span class="badge bg-warning text-dark">Need Attention</span> Good customers who haven't purchased recently — re‑engage.</div>
+                    <div class="mb-2"><span class="badge bg-danger">At Risk</span> Were good customers but declining — urgent intervention required.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
