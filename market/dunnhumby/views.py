@@ -349,6 +349,39 @@ def api_household_details(request):
 
 
 @login_required(login_url='/admin/login/')
+def api_segment_details(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    name = request.POST.get('rfm_segment')
+    if not name:
+        return JsonResponse({'error': 'rfm_segment required'}, status=400)
+    try:
+        qs = CustomerSegment.objects.filter(rfm_segment=name)
+        agg = qs.aggregate(
+            customers=Count('household_key'),
+            avg_spend=Avg('total_spend'),
+            avg_txns=Avg('total_transactions'),
+            avg_basket=Avg('avg_basket_value')
+        )
+        top_households = list(
+            qs.values('household_key','total_spend','total_transactions','avg_basket_value','recency_score','frequency_score','monetary_score','updated_at')
+              .order_by('-total_spend')[:12]
+        )
+        return JsonResponse({
+            'rfm_segment': name,
+            'metrics': {
+                'customers': agg['customers'] or 0,
+                'avg_spend': float(agg['avg_spend'] or 0),
+                'avg_txns': float(agg['avg_txns'] or 0),
+                'avg_basket': float(agg['avg_basket'] or 0),
+            },
+            'top_households': top_households,
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='/admin/login/')
 def api_update_record(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)

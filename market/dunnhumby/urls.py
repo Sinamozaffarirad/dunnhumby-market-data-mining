@@ -17,4 +17,5 @@ urlpatterns = [
     path("api/basket/", views.api_basket_details, name="api_basket_details"),
     path("api/product/", views.api_product_details, name="api_product_details"),
     path("api/household/", views.api_household_details, name="api_household_details"),
+    path("api/segment/", views.api_segment_details, name="api_segment_details"),
 ]
