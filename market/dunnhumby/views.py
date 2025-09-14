@@ -7,8 +7,11 @@ from .models import (
     CouponRedemption, CampaignMember, CausalData, BasketAnalysis,
     AssociationRule, CustomerSegment
 )
+from .ml_models import ml_analyzer
 import json
 from collections import defaultdict
+import threading
+from django.views.decorators.csrf import csrf_exempt
 
 
 def _generate_association_rules(min_support, min_confidence):
@@ -474,3 +477,150 @@ def api_export_data(request):
     resp = HttpResponse(csv_content, content_type='text/csv')
     resp['Content-Disposition'] = f'attachment; filename="{table_name}_export.csv"'
     return resp
+
+
+# Global variable to track training status
+ml_training_status = {'is_training': False, 'progress': 0, 'message': ''}
+
+
+@csrf_exempt
+def predictive_analysis_api(request):
+    """API endpoint for predictive market basket analysis"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        action = request.POST.get('action', 'predict')
+        model_type = request.POST.get('model_type', 'neural_network')
+        training_size = float(request.POST.get('training_size', 0.8))
+        
+        if action == 'train':
+            return train_ml_models(request, model_type, training_size)
+        elif action == 'predict':
+            return get_predictions(request, model_type)
+        elif action == 'recommendations':
+            return get_recommendations(request, model_type)
+        elif action == 'performance':
+            return get_model_performance(request)
+        else:
+            return JsonResponse({'error': 'Invalid action'}, status=400)
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def train_ml_models(request):
+    """Train ML models in background"""
+    global ml_training_status
+    
+    # Get parameters from POST data
+    model_type = request.POST.get('model_type', 'neural_network')
+    training_size = float(request.POST.get('training_size', 0.8))
+    
+    if ml_training_status['is_training']:
+        return JsonResponse({
+            'success': False,
+            'error': 'Training already in progress',
+            'status': 'training',
+            'message': 'Training already in progress',
+            'progress': ml_training_status['progress']
+        })
+    
+    def train_models():
+        global ml_training_status
+        try:
+            ml_training_status = {'is_training': True, 'progress': 10, 'message': 'Starting training...'}
+            
+            # Train models
+            success = ml_analyzer.train_models(training_size)
+            
+            if success:
+                ml_training_status = {'is_training': False, 'progress': 100, 'message': 'Training completed successfully!'}
+            else:
+                ml_training_status = {'is_training': False, 'progress': 0, 'message': 'Training failed'}
+                
+        except Exception as e:
+            ml_training_status = {'is_training': False, 'progress': 0, 'message': f'Training error: {str(e)}'}
+    
+    # Start training in background thread
+    thread = threading.Thread(target=train_models)
+    thread.daemon = True
+    thread.start()
+    
+    return JsonResponse({
+        'success': True,
+        'status': 'started',
+        'message': 'Model training started in background',
+        'progress': 10
+    })
+
+
+@csrf_exempt
+def get_predictions(request):
+    """Get department-level predictions"""
+    # Get parameters from POST data
+    model_type = request.POST.get('model_type', 'neural_network')
+    try:
+        predictions = ml_analyzer.get_department_predictions(model_type)
+        return JsonResponse({
+            'success': True,
+            'status': 'success',
+            'model_type': model_type,
+            'predictions': predictions
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Prediction error: {str(e)}',
+            'predictions': []
+        })
+
+
+@csrf_exempt
+def get_recommendations(request):
+    """Get AI-powered product recommendations"""
+    # Get parameters from POST data
+    model_type = request.POST.get('model_type', 'neural_network')
+    top_n = int(request.POST.get('top_n', 10))
+    try:
+        customer_id = request.POST.get('customer_id')
+        
+        recommendations = ml_analyzer.predict_customer_preferences(
+            model_type, customer_id, top_n
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'status': 'success',
+            'model_type': model_type,
+            'customer_id': customer_id,
+            'recommendations': recommendations
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Recommendation error: {str(e)}',
+            'recommendations': []
+        })
+
+
+@csrf_exempt
+def get_model_performance(request):
+    """Get model performance metrics"""
+    try:
+        performance = ml_analyzer.get_model_performance()
+        return JsonResponse({
+            'status': 'success',
+            'performance': performance,
+            'training_status': ml_training_status
+        })
+    except Exception as e:
+        return JsonResponse({'error': f'Performance error: {str(e)}'}, status=500)
+
+
+@csrf_exempt  
+def training_status_api(request):
+    """Get current training status"""
+    global ml_training_status
+    return JsonResponse(ml_training_status)

@@ -18,4 +18,11 @@ urlpatterns = [
     path("api/product/", views.api_product_details, name="api_product_details"),
     path("api/household/", views.api_household_details, name="api_household_details"),
     path("api/segment/", views.api_segment_details, name="api_segment_details"),
+    # ML API endpoints
+    path("api/ml/predictive/", views.predictive_analysis_api, name="predictive_analysis_api"),
+    path("api/ml/train/", views.train_ml_models, name="train_ml_models"),
+    path("api/ml/predictions/", views.get_predictions, name="get_predictions"),
+    path("api/ml/recommendations/", views.get_recommendations, name="get_recommendations"),
+    path("api/ml/performance/", views.get_model_performance, name="get_model_performance"),
+    path("api/ml/training-status/", views.training_status_api, name="training_status_api"),
 ]

@@ -721,7 +721,14 @@ html, body {
 
       <!-- Recommended Products -->
       <div class="chart-container">
-        <h5><i class="fas fa-lightbulb"></i> AI-Powered Product Recommendations</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="fas fa-lightbulb"></i> AI-Powered Product Recommendations</h5>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="expandSection('recommendations')" title="View All in Popup">
+              <i class="fas fa-expand-arrows-alt"></i> Expand
+            </button>
+          </div>
+        </div>
         <div class="row g-3" id="recommendedProducts">
           <!-- Dynamic content -->
         </div>
@@ -1276,40 +1283,169 @@ function initializePredictiveCharts() {
 }
 
 function generateRecommendations() {
-  const recommendations = [
-    { department: 'GROCERY', confidence: 0.89, revenue_impact: 1250 },
-    { department: 'DAIRY', confidence: 0.82, revenue_impact: 980 },
-    { department: 'FROZEN GROCERY', confidence: 0.75, revenue_impact: 750 },
-    { department: 'DELI', confidence: 0.71, revenue_impact: 650 }
-  ];
-  
-  const html = recommendations.map(rec => `
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100" style="border-left: 4px solid ${DEPARTMENT_CONFIG[rec.department]?.color || '#6C757D'};">
-        <div class="card-body">
-          <div class="d-flex align-items-center mb-2">
-            ${createDepartmentBadge(rec.department)}
-            <span class="ms-auto badge bg-success">${(rec.confidence * 100).toFixed(0)}%</span>
-          </div>
-          <div class="fw-bold text-primary fs-5">+$${rec.revenue_impact.toLocaleString()}</div>
-          <div class="text-muted small">Predicted Revenue Impact</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-  
+  const algorithm = document.getElementById('mlAlgorithm').value;
   const container = document.getElementById('recommendedProducts');
-  if (container) container.innerHTML = html;
+  
+  if (container) {
+    container.innerHTML = '<div class="col-12 text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading AI-powered recommendations...</p></div>';
+  }
+  
+  // Call ML API for recommendations
+  fetch('/analysis/api/ml/recommendations/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCsrfToken()
+    },
+    body: `model_type=${algorithm}&top_n=8`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success && data.recommendations.length > 0) {
+      const html = data.recommendations.map(rec => `
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 recommendation-card" 
+               style="border-left: 4px solid ${DEPARTMENT_CONFIG[rec.department]?.color || '#6C757D'}; cursor: pointer; transition: all 0.3s ease;" 
+               data-product-id="${rec.product_id}" 
+               data-department="${rec.department}" 
+               data-commodity="${rec.commodity || 'All Products'}" 
+               data-confidence="${rec.confidence}" 
+               data-revenue-impact="${rec.revenue_impact}"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.2)'"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''"
+               onclick="showRecommendationDetails('${rec.product_id}', '${rec.department}', '${rec.commodity || 'All Products'}', '${rec.confidence}', '${rec.revenue_impact}')">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-2">
+                ${createDepartmentBadge(rec.department)}
+                <span class="ms-auto badge bg-success">${(rec.confidence * 100).toFixed(0)}%</span>
+              </div>
+              <h6 class="card-title text-truncate">${rec.commodity || 'All Products'}</h6>
+              <div class="fw-bold text-primary fs-5">+$${rec.revenue_impact.toLocaleString()}</div>
+              <div class="text-muted small">Predicted Revenue Impact</div>
+              <div class="text-muted small mt-1">Product ID: ${rec.product_id}</div>
+              <div class="text-muted small mt-1"><i class="fas fa-mouse-pointer"></i> Click for details</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      if (container) container.innerHTML = html;
+    } else {
+      if (container) {
+        container.innerHTML = '<div class="col-12 text-center text-muted"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>No recommendations available. Try training the model first.</p></div>';
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error loading recommendations:', error);
+    if (container) {
+      container.innerHTML = '<div class="col-12 text-center text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Error loading recommendations</p></div>';
+    }
+  });
 }
 
 function runPredictiveAnalysis() {
   const algorithm = document.getElementById('mlAlgorithm').value;
+  const trainingSize = document.getElementById('trainingSizeSlider').value;
+  
   showNotification(`Training ${algorithm.replace('_', ' ')} model...`, 'info');
   
-  setTimeout(() => {
-    showNotification('Predictive model trained successfully!', 'success');
-    generateRecommendations();
+  // First, train the ML models
+  fetch('/analysis/api/ml/train/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCsrfToken()
+    },
+    body: `model_type=${algorithm}&training_size=${trainingSize}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showNotification('Model training started successfully!', 'success');
+      
+      // Poll training status
+      checkTrainingStatus(algorithm);
+      
+      // Load predictions and recommendations
+      setTimeout(() => {
+        loadPredictiveResults(algorithm);
+        generateRecommendations();
+      }, 2000);
+      
+    } else {
+      showNotification(`Training failed: ${data.error}`, 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Error training model:', error);
+    showNotification('Error starting model training', 'error');
+  });
+}
+
+function checkTrainingStatus(algorithm) {
+  const statusInterval = setInterval(() => {
+    fetch('/analysis/api/ml/training-status/', {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': getCsrfToken()
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'completed') {
+        clearInterval(statusInterval);
+        showNotification('Model training completed successfully!', 'success');
+        loadModelPerformance(algorithm);
+      } else if (data.status === 'failed') {
+        clearInterval(statusInterval);
+        showNotification('Model training failed', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error checking training status:', error);
+      clearInterval(statusInterval);
+    });
   }, 3000);
+}
+
+function loadPredictiveResults(algorithm) {
+  // Load department predictions
+  fetch('/analysis/api/ml/predictions/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCsrfToken()
+    },
+    body: `model_type=${algorithm}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success && data.predictions.length > 0) {
+      updatePredictiveCharts(data.predictions);
+    }
+  })
+  .catch(error => {
+    console.error('Error loading predictions:', error);
+  });
+}
+
+function loadModelPerformance(algorithm) {
+  fetch('/analysis/api/ml/performance/', {
+    method: 'GET',
+    headers: {
+      'X-CSRFToken': getCsrfToken()
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success && data.performance) {
+      updateAccuracyChart(data.performance);
+    }
+  })
+  .catch(error => {
+    console.error('Error loading model performance:', error);
+  });
 }
 
 // Differential Analysis Functions
@@ -1476,13 +1612,17 @@ function expandSection(sectionType) {
       title = 'All High-Value Baskets';
       container = document.getElementById('basketsGrid');
       break;
+    case 'recommendations':
+      title = 'All AI-Powered Product Recommendations';
+      container = document.getElementById('recommendedProducts');
+      break;
   }
   
   if (container) {
     let content = container.innerHTML;
     
-    // For baskets, wrap in proper bootstrap grid
-    if (sectionType === 'baskets') {
+    // For baskets and recommendations, wrap in proper bootstrap grid
+    if (sectionType === 'baskets' || sectionType === 'recommendations') {
       content = `<div class="row g-3">${content}</div>`;
     }
     
@@ -1555,6 +1695,23 @@ function attachPopupEventListeners(sectionType) {
         }
       });
     });
+  } else if (sectionType === 'recommendations') {
+    // Attach recommendation card click handlers
+    const recommendationCards = expandedContent.querySelectorAll('.recommendation-card');
+    recommendationCards.forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function() {
+        const productId = this.dataset.productId;
+        const department = this.dataset.department;
+        const commodity = this.dataset.commodity;
+        const confidence = this.dataset.confidence;
+        const revenueImpact = this.dataset.revenueImpact;
+        
+        if (productId) {
+          showRecommendationDetails(productId, department, commodity, confidence, revenueImpact);
+        }
+      });
+    });
   } else {
     // Attach rule card click handlers for department and commodity rules
     const ruleCards = expandedContent.querySelectorAll('.rule-card');
@@ -1577,6 +1734,100 @@ function attachPopupEventListeners(sectionType) {
 }
 
 // Remove the scrollToSection function since we removed the scroll buttons
+
+// Show detailed recommendation information
+function showRecommendationDetails(productId, department, commodity, confidence, revenueImpact) {
+  const title = `🛒 Product Recommendation Details`;
+  
+  // Parse confidence as a percentage
+  const confidencePercent = (parseFloat(confidence) * 100).toFixed(1);
+  
+  // Format revenue impact
+  const formattedRevenue = revenueImpact ? `$${parseInt(revenueImpact).toLocaleString()}` : 'N/A';
+  
+  // Create department and commodity badges
+  const deptBadge = createDepartmentBadge(department || 'N/A');
+  const commodityBadge = createCommodityBadge(commodity || 'N/A');
+  
+  // Get confidence interpretation
+  let confidenceLevel = 'Low';
+  let confidenceColor = '#dc3545';
+  let confidenceDesc = 'This recommendation has low confidence. Consider additional market research.';
+  
+  if (parseFloat(confidence) >= 0.8) {
+    confidenceLevel = 'Very High';
+    confidenceColor = '#28a745';
+    confidenceDesc = 'This is a highly confident recommendation based on strong predictive patterns.';
+  } else if (parseFloat(confidence) >= 0.65) {
+    confidenceLevel = 'High';
+    confidenceColor = '#20c997';
+    confidenceDesc = 'This recommendation shows good confidence with reliable predictive indicators.';
+  } else if (parseFloat(confidence) >= 0.5) {
+    confidenceLevel = 'Medium';
+    confidenceColor = '#ffc107';
+    confidenceDesc = 'This recommendation has moderate confidence. Consider combining with other insights.';
+  }
+  
+  const body = `
+    <div class="recommendation-details" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="detail-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 15px; text-align: center;">
+            <h4 style="margin: 0; font-weight: 600;">Product ID</h4>
+            <h2 style="margin: 0.5rem 0 0 0; font-size: 2.5rem; font-weight: 700;">${productId}</h2>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-card" style="background: linear-gradient(135deg, ${confidenceColor}, ${confidenceColor}dd); color: white; padding: 1.5rem; border-radius: 15px; text-align: center;">
+            <h4 style="margin: 0; font-weight: 600;">Confidence</h4>
+            <h2 style="margin: 0.5rem 0 0 0; font-size: 2.5rem; font-weight: 700;">${confidencePercent}%</h2>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.9;">${confidenceLevel}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #007bff;">
+            <h5 style="color: #495057; margin-bottom: 1rem;"><i class="fas fa-building"></i> Department</h5>
+            <div>${deptBadge}</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #28a745;">
+            <h5 style="color: #495057; margin-bottom: 1rem;"><i class="fas fa-boxes"></i> Commodity</h5>
+            <div>${commodityBadge}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-4">
+        <div class="col-12">
+          <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <h5 style="margin: 0 0 0.5rem 0;"><i class="fas fa-dollar-sign"></i> Predicted Revenue Impact</h5>
+            <h3 style="margin: 0; font-size: 2rem; font-weight: 700;">${formattedRevenue}</h3>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.9;">Estimated additional revenue from this recommendation</p>
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #e9ecef; padding: 1.5rem; border-radius: 10px;">
+        <h5 style="color: #495057; margin-bottom: 1rem;"><i class="fas fa-lightbulb"></i> AI Analysis</h5>
+        <p style="color: #6c757d; margin-bottom: 1rem; line-height: 1.6;">${confidenceDesc}</p>
+        
+        <h6 style="color: #495057; margin-bottom: 0.5rem;">Recommendation Strategy:</h6>
+        <ul style="color: #6c757d; margin: 0; padding-left: 1.5rem;">
+          <li>Position this product prominently in the <strong>${department}</strong> section</li>
+          <li>Consider cross-merchandising with complementary ${commodity.toLowerCase()} products</li>
+          <li>Monitor performance and adjust placement based on actual sales data</li>
+          ${parseFloat(confidence) >= 0.7 ? '<li>This high-confidence recommendation is suitable for promotional campaigns</li>' : '<li>Test with smaller inventory quantities before major promotions</li>'}
+        </ul>
+      </div>
+    </div>
+  `;
+  
+  showDetailModal(title, body);
+}
 
 // Show detailed rule information
 function showRuleDetails(antecedent, consequent, support, confidence, lift, ruleType) {
@@ -1754,6 +2005,109 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+// Helper functions for ML integration
+function getCsrfToken() {
+  return (document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))||'').split('=')[1]||'';
+}
+
+function updatePredictiveCharts(predictions) {
+  // Update Customer Lifetime Value Chart
+  const clvCtx = document.getElementById('clvChart');
+  if (clvCtx && predictions.length > 0) {
+    if (charts.clv) charts.clv.destroy();
+    
+    charts.clv = new Chart(clvCtx, {
+      type: 'doughnut',
+      data: {
+        labels: predictions.slice(0, 5).map(p => p.department),
+        datasets: [{
+          data: predictions.slice(0, 5).map(p => p.avg_value),
+          backgroundColor: predictions.slice(0, 5).map(p => 
+            DEPARTMENT_CONFIG[p.department]?.color || '#6C757D'
+          )
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              font: {
+                size: 10
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+function updateAccuracyChart(performance) {
+  const accuracyCtx = document.getElementById('accuracyChart');
+  if (accuracyCtx && performance) {
+    if (charts.accuracy) charts.accuracy.destroy();
+    
+    const models = Object.keys(performance);
+    const accuracyData = models.map(model => (performance[model].accuracy * 100).toFixed(1));
+    const precisionData = models.map(model => (performance[model].precision * 100).toFixed(1));
+    const recallData = models.map(model => (performance[model].recall * 100).toFixed(1));
+    
+    charts.accuracy = new Chart(accuracyCtx, {
+      type: 'bar',
+      data: {
+        labels: models.map(m => m.replace('_', ' ').toUpperCase()),
+        datasets: [
+          {
+            label: 'Accuracy',
+            data: accuracyData,
+            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Precision',
+            data: precisionData,
+            backgroundColor: 'rgba(118, 75, 162, 0.8)',
+            borderColor: 'rgba(118, 75, 162, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Recall',
+            data: recallData,
+            backgroundColor: 'rgba(39, 174, 96, 0.8)',
+            borderColor: 'rgba(39, 174, 96, 1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top'
+          }
+        }
+      }
+    });
+  }
+}
 </script>
 
 {% endblock %}
