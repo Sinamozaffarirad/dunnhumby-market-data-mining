@@ -750,30 +750,61 @@ html, body {
 
       <!-- Comparison Controls -->
       <div class="interactive-controls">
-        <h5><i class="fas fa-filter"></i> Comparison Configuration</h5>
-        <div class="row g-2">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="mb-0"><i class="fas fa-filter"></i> Comparison Configuration</h5>
+          <button class="btn btn-outline-info btn-sm" onclick="showConfigurationHelp()" title="Configuration Help">
+            <i class="fas fa-question-circle"></i> Help
+          </button>
+        </div>
+
+        <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">Compare By:</label>
-            <select class="form-select" id="compareBy">
-              <option value="time">Time Periods</option>
-              <option value="customer_segment">Customer Segments</option>
-              <option value="store">Store Locations</option>
-              <option value="season">Seasonal Patterns</option>
+            <label class="form-label fw-bold">
+              Compare By:
+              <i class="fas fa-info-circle text-muted ms-1" title="Choose what aspect to compare between different groups"></i>
+            </label>
+            <select class="form-select" id="compareBy" onchange="updateComparisonDescription()">
+              <option value="time">📅 Time Periods (Quarterly Analysis)</option>
+              <option value="customer_segment">👥 Customer Segments (High vs Low Value)</option>
+              <option value="store">🏪 Store Locations (Urban vs Suburban)</option>
+              <option value="season">🌤️ Seasonal Patterns (Weather Impact)</option>
             </select>
+            <div class="form-text" id="compareByDescription">
+              Compare shopping patterns across different time quarters to identify seasonal trends and temporal changes.
+            </div>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Statistical Test:</label>
-            <select class="form-select" id="statTest">
-              <option value="chi_square">Chi-Square Test</option>
-              <option value="t_test">Student's T-Test</option>
-              <option value="mann_whitney">Mann-Whitney U</option>
-              <option value="kolmogorov">Kolmogorov-Smirnov</option>
+            <label class="form-label fw-bold">
+              Statistical Test:
+              <i class="fas fa-info-circle text-muted ms-1" title="Statistical method to determine if differences are significant"></i>
+            </label>
+            <select class="form-select" id="statTest" onchange="updateStatTestDescription()">
+              <option value="chi_square">χ² Chi-Square Test (Category Frequencies)</option>
+              <option value="t_test">📊 Student's T-Test (Average Comparisons)</option>
+              <option value="mann_whitney">📈 Mann-Whitney U (Non-Normal Data)</option>
+              <option value="kolmogorov">📉 Kolmogorov-Smirnov (Distributions)</option>
             </select>
+            <div class="form-text" id="statTestDescription">
+              Tests if category frequencies differ significantly between groups. Best for comparing product category distributions.
+            </div>
           </div>
         </div>
-        <button class="btn btn-primary mt-2" onclick="runDifferentialAnalysis()">
-          <i class="fas fa-play"></i> Compare Patterns
-        </button>
+
+        <div class="row g-2 mt-2">
+          <div class="col-md-8">
+            <div class="alert alert-info mb-2" id="analysisPreview">
+              <small class="mb-0">
+                <strong>📊 Analysis Preview:</strong>
+                <span id="previewText">Will compare shopping patterns between different time quarters using Chi-Square test to identify statistically significant differences in product category preferences.</span>
+              </small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100" onclick="runDifferentialAnalysis()">
+              <i class="fas fa-play"></i> Compare Patterns
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Comparison Results -->
@@ -804,7 +835,14 @@ html, body {
 
       <!-- Differential Insights -->
       <div class="chart-container">
-        <h5><i class="fas fa-microscope"></i> Key Differential Insights</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="fas fa-microscope"></i> Key Differential Insights</h5>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" onclick="expandSection('differential')" title="View All in Popup">
+              <i class="fas fa-expand-arrows-alt"></i> Expand
+            </button>
+          </div>
+        </div>
         <div class="insights-container" id="differentialInsights">
           <div class="text-center py-3 text-muted">
             <i class="fas fa-chart-line fa-2x mb-2"></i>
@@ -1456,28 +1494,154 @@ function loadDifferentialAnalysis() {
 
 function initializeComparisonChart() {
   const ctx = document.getElementById('comparisonChart');
+  if (ctx && charts.comparison) {
+    charts.comparison.destroy();
+  }
+
   if (ctx) {
-    charts.comparison = new Chart(ctx, {
-      type: 'bar',
-      data: {
+    const compareBy = document.getElementById('compareBy')?.value || 'time';
+
+    // Dynamic chart data based on comparison type
+    let chartData = {
+      'time': {
         labels: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
         datasets: [{
-          label: 'Segment A',
-          data: [45, 52, 48, 61],
-          backgroundColor: 'rgba(102, 126, 234, 0.8)'
+          label: 'Sales Volume',
+          data: [2450, 2780, 3120, 3650],
+          backgroundColor: 'rgba(102, 126, 234, 0.8)',
+          borderColor: 'rgba(102, 126, 234, 1)',
+          borderWidth: 2
         }, {
-          label: 'Segment B',
-          data: [38, 41, 44, 39],
-          backgroundColor: 'rgba(118, 75, 162, 0.8)'
-        }]
+          label: 'Basket Size',
+          data: [1850, 2100, 2250, 2890],
+          backgroundColor: 'rgba(118, 75, 162, 0.8)',
+          borderColor: 'rgba(118, 75, 162, 1)',
+          borderWidth: 2
+        }],
+        yAxisLabel: 'Sales ($K)'
       },
+      'customer_segment': {
+        labels: ['GROCERY', 'MEAT-PCKGD', 'DAIRY', 'FROZEN', 'PRODUCE'],
+        datasets: [{
+          label: 'High-Value Customers',
+          data: [3400, 1850, 2200, 1650, 1900],
+          backgroundColor: 'rgba(40, 167, 69, 0.8)',
+          borderColor: 'rgba(40, 167, 69, 1)',
+          borderWidth: 2
+        }, {
+          label: 'Low-Value Customers',
+          data: [2100, 850, 1200, 950, 1100],
+          backgroundColor: 'rgba(255, 193, 7, 0.8)',
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderWidth: 2
+        }],
+        yAxisLabel: 'Average Spend ($)'
+      },
+      'store': {
+        labels: ['PHARMACY', 'SPIRITS', 'FROZEN', 'GROCERY', 'PRODUCE'],
+        datasets: [{
+          label: 'Urban Stores',
+          data: [1850, 1200, 2100, 3400, 1650],
+          backgroundColor: 'rgba(220, 53, 69, 0.8)',
+          borderColor: 'rgba(220, 53, 69, 1)',
+          borderWidth: 2
+        }, {
+          label: 'Suburban Stores',
+          data: [950, 800, 2850, 2900, 1800],
+          backgroundColor: 'rgba(23, 162, 184, 0.8)',
+          borderColor: 'rgba(23, 162, 184, 1)',
+          borderWidth: 2
+        }],
+        yAxisLabel: 'Units Sold'
+      },
+      'season': {
+        labels: ['Winter', 'Spring', 'Summer', 'Fall'],
+        datasets: [{
+          label: 'Comfort Foods',
+          data: [3850, 2200, 1650, 3100],
+          backgroundColor: 'rgba(255, 99, 71, 0.8)',
+          borderColor: 'rgba(255, 99, 71, 1)',
+          borderWidth: 2
+        }, {
+          label: 'Fresh Items',
+          data: [1400, 2800, 3600, 2100],
+          backgroundColor: 'rgba(32, 201, 151, 0.8)',
+          borderColor: 'rgba(32, 201, 151, 1)',
+          borderWidth: 2
+        }],
+        yAxisLabel: 'Sales Volume'
+      }
+    };
+
+    const data = chartData[compareBy] || chartData['time'];
+
+    charts.comparison = new Chart(ctx, {
+      type: 'bar',
+      data: data,
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top'
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: `Differential Analysis: ${compareBy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Comparison`,
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y;
+                const suffix = data.yAxisLabel.includes('$') ? '' : (data.yAxisLabel.includes('Units') ? ' units' : '');
+                return `${label}: ${value.toLocaleString()}${suffix}`;
+              }
+            }
           }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: data.yAxisLabel,
+              font: {
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              callback: function(value) {
+                return data.yAxisLabel.includes('$') ? '$' + value.toLocaleString() : value.toLocaleString();
+              }
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: compareBy === 'time' ? 'Time Periods' :
+                    compareBy === 'customer_segment' ? 'Product Categories' :
+                    compareBy === 'store' ? 'Product Categories' : 'Seasons',
+              font: {
+                weight: 'bold'
+              }
+            }
+          }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
         }
       }
     });
@@ -1544,15 +1708,35 @@ function generateDifferentialInsights() {
   const insights = insightMap[compareBy] || insightMap['time'];
   
   const html = insights.map(insight => `
-    <div class="card mb-3 border-0 shadow-sm">
+    <div class="card mb-3 border-0 shadow-sm differential-insight-card"
+         style="cursor: pointer; transition: all 0.3s ease; border-left: 4px solid ${insight.impact === 'High' ? '#dc3545' : '#ffc107'} !important;"
+         data-insight-title="${insight.title}"
+         data-insight-description="${insight.description}"
+         data-insight-impact="${insight.impact}"
+         data-insight-recommendation="${insight.recommendation}"
+         data-compare-by="${compareBy}"
+         data-stat-test="${statTest}"
+         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.15)'"
+         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.12)'"
+         onclick="showDifferentialInsightDetails('${insight.title}', '${insight.description}', '${insight.impact}', '${insight.recommendation}', '${compareBy}', '${statTest}')">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h6 class="mb-0 text-primary">${insight.title}</h6>
-          <span class="badge ${insight.impact === 'High' ? 'bg-danger' : 'bg-warning'}">${insight.impact} Impact</span>
+          <h6 class="mb-0 text-primary fw-bold">${insight.title}</h6>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge ${insight.impact === 'High' ? 'bg-danger' : 'bg-warning'}">${insight.impact} Impact</span>
+            <small class="text-muted"><i class="fas fa-mouse-pointer"></i></small>
+          </div>
         </div>
-        <p class="text-muted mb-2">${insight.description}</p>
+        <p class="text-muted mb-2 lh-base">${insight.description}</p>
         <div class="bg-light p-2 rounded">
           <small><strong>💡 Recommendation:</strong> ${insight.recommendation}</small>
+        </div>
+        <div class="mt-2 pt-2 border-top">
+          <small class="text-muted">
+            <i class="fas fa-chart-bar"></i> Analysis: ${statTest.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            <span class="mx-2">•</span>
+            <i class="fas fa-filter"></i> Comparing: ${compareBy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          </small>
         </div>
       </div>
     </div>
@@ -1586,10 +1770,12 @@ function runDifferentialAnalysis() {
     // Update metrics with realistic statistical values
     const pValue = document.getElementById('pValue');
     const effectSize = document.getElementById('effectSize');
-    
+
     if (pValue) pValue.textContent = (Math.random() * 0.049 + 0.001).toFixed(3);
     if (effectSize) effectSize.textContent = (Math.random() * 0.6 + 0.3).toFixed(2);
-    
+
+    // Refresh the chart with new comparison data
+    initializeComparisonChart();
     generateDifferentialInsights();
     showNotification(`${statTest.replace('_', ' ')} analysis completed successfully!`, 'success');
   }, Math.random() * 1500 + 2000);
@@ -1615,6 +1801,10 @@ function expandSection(sectionType) {
     case 'recommendations':
       title = 'All AI-Powered Product Recommendations';
       container = document.getElementById('recommendedProducts');
+      break;
+    case 'differential':
+      title = 'All Differential Analysis Insights';
+      container = document.getElementById('differentialInsights');
       break;
   }
   
@@ -1706,9 +1896,27 @@ function attachPopupEventListeners(sectionType) {
         const commodity = this.dataset.commodity;
         const confidence = this.dataset.confidence;
         const revenueImpact = this.dataset.revenueImpact;
-        
+
         if (productId) {
           showRecommendationDetails(productId, department, commodity, confidence, revenueImpact);
+        }
+      });
+    });
+  } else if (sectionType === 'differential') {
+    // Attach differential insight card click handlers
+    const insightCards = expandedContent.querySelectorAll('.differential-insight-card');
+    insightCards.forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function() {
+        const title = this.dataset.insightTitle;
+        const description = this.dataset.insightDescription;
+        const impact = this.dataset.insightImpact;
+        const recommendation = this.dataset.insightRecommendation;
+        const compareBy = this.dataset.compareBy;
+        const statTest = this.dataset.statTest;
+
+        if (title) {
+          showDifferentialInsightDetails(title, description, impact, recommendation, compareBy, statTest);
         }
       });
     });
@@ -1734,6 +1942,237 @@ function attachPopupEventListeners(sectionType) {
 }
 
 // Remove the scrollToSection function since we removed the scroll buttons
+
+// Configuration helper functions
+function updateComparisonDescription() {
+  const compareBy = document.getElementById('compareBy')?.value;
+  const description = document.getElementById('compareByDescription');
+  const previewText = document.getElementById('previewText');
+
+  const descriptions = {
+    'time': 'Compare shopping patterns across different time quarters to identify seasonal trends and temporal changes.',
+    'customer_segment': 'Analyze differences between high-value and low-value customer shopping behaviors and preferences.',
+    'store': 'Compare purchasing patterns between urban and suburban store locations to understand regional differences.',
+    'season': 'Examine how weather and seasonal changes impact product category demands and shopping trends.'
+  };
+
+  if (description) description.textContent = descriptions[compareBy] || descriptions['time'];
+  updateAnalysisPreview();
+}
+
+function updateStatTestDescription() {
+  const statTest = document.getElementById('statTest')?.value;
+  const description = document.getElementById('statTestDescription');
+
+  const descriptions = {
+    'chi_square': 'Tests if category frequencies differ significantly between groups. Best for comparing product category distributions.',
+    't_test': 'Compares average values between two groups. Ideal for analyzing differences in sales amounts, basket sizes, or quantities.',
+    'mann_whitney': 'Non-parametric test for comparing groups when data is not normally distributed. Robust for skewed sales data.',
+    'kolmogorov': 'Tests if two groups have different probability distributions. Useful for comparing overall shopping pattern distributions.'
+  };
+
+  if (description) description.textContent = descriptions[statTest] || descriptions['chi_square'];
+  updateAnalysisPreview();
+}
+
+function updateAnalysisPreview() {
+  const compareBy = document.getElementById('compareBy')?.value || 'time';
+  const statTest = document.getElementById('statTest')?.value || 'chi_square';
+  const previewText = document.getElementById('previewText');
+
+  const comparisons = {
+    'time': 'different time quarters',
+    'customer_segment': 'high-value vs low-value customers',
+    'store': 'urban vs suburban store locations',
+    'season': 'different seasonal periods'
+  };
+
+  const tests = {
+    'chi_square': 'Chi-Square test to identify statistically significant differences in product category preferences',
+    't_test': 'T-Test to compare average sales values and quantities between groups',
+    'mann_whitney': 'Mann-Whitney U test to analyze non-parametric differences in shopping behaviors',
+    'kolmogorov': 'Kolmogorov-Smirnov test to compare overall shopping pattern distributions'
+  };
+
+  if (previewText) {
+    previewText.textContent = `Will compare shopping patterns between ${comparisons[compareBy]} using ${tests[statTest]}.`;
+  }
+}
+
+function showConfigurationHelp() {
+  const helpContent = `
+    <div class="configuration-help">
+      <h6 class="text-primary mb-3"><i class="fas fa-info-circle"></i> Differential Analysis Configuration Guide</h6>
+
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="fw-bold mb-2">Compare By Options:</h6>
+          <div class="help-option mb-2">
+            <strong>📅 Time Periods:</strong>
+            <small class="d-block text-muted">Compare Q1, Q2, Q3, Q4 patterns to identify seasonal trends, holiday impacts, and temporal shifts in customer preferences.</small>
+          </div>
+          <div class="help-option mb-2">
+            <strong>👥 Customer Segments:</strong>
+            <small class="d-block text-muted">Analyze high-value vs low-value customer behaviors to understand premium preferences and budget shopping patterns.</small>
+          </div>
+          <div class="help-option mb-2">
+            <strong>🏪 Store Locations:</strong>
+            <small class="d-block text-muted">Compare urban vs suburban shopping patterns to identify regional preferences and demographic influences.</small>
+          </div>
+          <div class="help-option">
+            <strong>🌤️ Seasonal Patterns:</strong>
+            <small class="d-block text-muted">Examine weather and seasonal impacts on product demands, including comfort foods and seasonal items.</small>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <h6 class="fw-bold mb-2">Statistical Test Options:</h6>
+          <div class="help-option mb-2">
+            <strong>χ² Chi-Square Test:</strong>
+            <small class="d-block text-muted">Best for comparing category frequencies and product distribution differences between groups.</small>
+          </div>
+          <div class="help-option mb-2">
+            <strong>📊 T-Test:</strong>
+            <small class="d-block text-muted">Ideal for comparing average values like sales amounts, basket sizes, or purchase quantities.</small>
+          </div>
+          <div class="help-option mb-2">
+            <strong>📈 Mann-Whitney U:</strong>
+            <small class="d-block text-muted">Non-parametric test for skewed data, robust for real-world sales distributions.</small>
+          </div>
+          <div class="help-option">
+            <strong>📉 Kolmogorov-Smirnov:</strong>
+            <small class="d-block text-muted">Tests if two groups have fundamentally different shopping pattern distributions.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-success mt-3">
+        <small><strong>💡 Manager's Tip:</strong> Start with Time Periods + Chi-Square for easy-to-understand seasonal trends, then explore Customer Segments + T-Test for value-based insights.</small>
+      </div>
+    </div>
+  `;
+
+  showDetailModal('Configuration Help', helpContent);
+}
+
+// Show detailed differential insight information
+function showDifferentialInsightDetails(title, description, impact, recommendation, compareBy, statTest) {
+  // Get impact-based styling
+  const impactColor = impact === 'High' ? '#dc3545' : '#ffc107';
+  const impactIcon = impact === 'High' ? '⚠️' : '⚡';
+
+  // Format the comparison and test names for display
+  const comparisonName = compareBy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const testName = statTest.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+  // Generate additional insights based on the type
+  let additionalInsights = '';
+  let actionItems = '';
+
+  if (compareBy === 'time') {
+    additionalInsights = `
+      <li><strong>Seasonality Pattern:</strong> This trend shows recurring seasonal behavior that can be leveraged for inventory planning</li>
+      <li><strong>Marketing Window:</strong> Consider launching targeted campaigns 2-3 weeks before peak periods</li>
+      <li><strong>Supply Chain Impact:</strong> Adjust supplier orders and warehouse capacity based on these temporal patterns</li>
+    `;
+    actionItems = `
+      <li>📊 Update quarterly forecasting models with this insight</li>
+      <li>📋 Review current inventory allocation strategies</li>
+      <li>🎯 Plan seasonal marketing campaigns in advance</li>
+    `;
+  } else if (compareBy === 'customer_segment') {
+    additionalInsights = `
+      <li><strong>Customer Value:</strong> Understanding segment preferences helps optimize product placement and pricing</li>
+      <li><strong>Loyalty Opportunity:</strong> Target high-value segments with personalized offers and premium product lines</li>
+      <li><strong>Market Expansion:</strong> Identify opportunities to move low-value customers to higher spending categories</li>
+    `;
+    actionItems = `
+      <li>👥 Create targeted customer loyalty programs</li>
+      <li>💰 Develop premium product placement strategies</li>
+      <li>📈 Design customer value migration campaigns</li>
+    `;
+  } else if (compareBy === 'store') {
+    additionalInsights = `
+      <li><strong>Location Strategy:</strong> Store location significantly impacts product demand and customer preferences</li>
+      <li><strong>Demographic Influence:</strong> Urban vs suburban differences reflect lifestyle and accessibility factors</li>
+      <li><strong>Operational Efficiency:</strong> Tailor store layouts and inventory to location-specific patterns</li>
+    `;
+    actionItems = `
+      <li>🏪 Customize store layouts by location type</li>
+      <li>🚚 Optimize delivery and logistics strategies</li>
+      <li>📍 Consider location factors in new store planning</li>
+    `;
+  } else {
+    additionalInsights = `
+      <li><strong>Weather Impact:</strong> Seasonal patterns reflect natural demand cycles and weather influences</li>
+      <li><strong>Cultural Factors:</strong> Holiday and seasonal traditions drive predictable shopping behaviors</li>
+      <li><strong>Product Lifecycle:</strong> Understand when products naturally peak and decline in demand</li>
+    `;
+    actionItems = `
+      <li>🌤️ Integrate weather forecasting in demand planning</li>
+      <li>🎭 Plan seasonal product promotions and clearances</li>
+      <li>📦 Optimize seasonal inventory turnover</li>
+    `;
+  }
+
+  const body = `
+    <div class="differential-insight-details" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+      <div class="row mb-4">
+        <div class="col-md-8">
+          <div class="detail-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 15px;">
+            <h4 style="margin: 0 0 0.5rem 0; font-weight: 600;">${title}</h4>
+            <p style="margin: 0; opacity: 0.9; line-height: 1.4;">${description}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="detail-card" style="background: linear-gradient(135deg, ${impactColor}, ${impactColor}dd); color: white; padding: 1.5rem; border-radius: 15px; text-align: center;">
+            <h4 style="margin: 0; font-weight: 600;">Impact Level</h4>
+            <h2 style="margin: 0.5rem 0; font-size: 2.5rem;">${impactIcon}</h2>
+            <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700;">${impact}</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #007bff;">
+            <h6 style="color: #495057; margin-bottom: 1rem;"><i class="fas fa-chart-bar"></i> Statistical Analysis</h6>
+            <p style="color: #6c757d; margin: 0;"><strong>Method:</strong> ${testName}</p>
+            <small style="color: #6c757d;">Comparing patterns between ${comparisonName.toLowerCase()}</small>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 1.5rem; border-radius: 10px;">
+            <h6 style="margin: 0 0 1rem 0;"><i class="fas fa-lightbulb"></i> Primary Recommendation</h6>
+            <p style="margin: 0; line-height: 1.4; font-weight: 500;">${recommendation}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-12">
+          <div style="background: #e9ecef; padding: 1.5rem; border-radius: 10px;">
+            <h6 style="color: #495057; margin-bottom: 1rem;"><i class="fas fa-microscope"></i> Business Implications</h6>
+            <ul style="color: #6c757d; margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+              ${additionalInsights}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #ffc107, #ffb300); color: #212529; padding: 1.5rem; border-radius: 10px;">
+        <h6 style="margin-bottom: 1rem;"><i class="fas fa-tasks"></i> Recommended Action Items</h6>
+        <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+          ${actionItems}
+          <li>📊 Monitor this pattern over the next reporting period</li>
+          <li>🔍 Investigate underlying causes and additional correlations</li>
+        </ul>
+      </div>
+    </div>
+  `;
+
+  showDetailModal(`${impactIcon} Differential Analysis Insight`, body);
+}
 
 // Show detailed recommendation information
 function showRecommendationDetails(productId, department, commodity, confidence, revenueImpact) {
