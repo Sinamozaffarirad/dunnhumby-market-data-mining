@@ -64,18 +64,17 @@ A comprehensive Django-based web application for market basket analysis using th
 
 2. **Install dependencies**
    ```bash
-   cd Website
    pip install -r requirements.txt
    ```
 
 3. **Database Configuration**
-   - Set up SQL Server connection in `market/market/settings.py`
+   - Set up SQL Server connection in `Website/market/market/settings.py`
    - Import Dunnhumby dataset to SQL Server
    - Update database credentials
 
 4. **Run the application**
    ```bash
-   cd market
+   cd Website/market
    python manage.py migrate
    python manage.py runserver
    ```
@@ -96,9 +95,8 @@ market-data-mining-project/
 │   │   │   └── templates/     # HTML templates
 │   │   ├── static/            # CSS, JS, images
 │   │   └── templates/         # Base templates
-│   └── requirements.txt       # Python dependencies
-├── Data/                      # Dataset files (gitignored)
-├── Documentation/             # Project documentation
+│   └── venv/                  # Virtual environment
+├── requirements.txt           # Python dependencies
 └── README.md                  # This file
 ```
 
