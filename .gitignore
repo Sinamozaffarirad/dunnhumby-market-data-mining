@@ -237,7 +237,6 @@ package.json
 package-lock.json
 directory_tree.md
 report.xml
-requirements.txt
 *.jpeg
 *.jpg
 *.gif
