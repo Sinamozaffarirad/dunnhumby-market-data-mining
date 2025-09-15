@@ -1,5 +1,5 @@
 Django==5.2.10
-mssql-django==1.5.1
+mssql-django==1.6
 pyodbc==5.2.0
 pandas==2.2.3
 numpy==2.1.3
