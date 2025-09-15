@@ -220,3 +220,25 @@ Dunhummy/
 
 # Screenshots (keep local documentation but not in repo)
 Screenshot*.png
+
+# Project specific files to exclude
+*.pdf
+*.docx
+*.doc
+*.tex
+fonts/
+*.ttf
+*.otf
+DataBase*/
+market/
+.dist/
+GIT*TOKEN*/
+package.json
+package-lock.json
+directory_tree.md
+report.xml
+requirements.txt
+*.jpeg
+*.jpg
+*.gif
+kashanu.jpeg
