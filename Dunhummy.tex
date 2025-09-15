@@ -1,0 +1,180 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx} 
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{setspace}
+\usepackage{caption}
+
+\usepackage[backend=biber,style=ieee]{biblatex}
+\usepackage{float} 
+\usepackage{url}
+\usepackage{xurl} 
+\usepackage{hyperref}
+\usepackage{arabxetex}
+\usepackage{bidi}
+\usepackage{xepersian}
+
+\settextfont[Scale=1]{B Nazanin}
+\setlatintextfont[Scale=0.9]{Times New Roman CE}
+\newfontfamily\arabicfont[Script=Arabic,Scale=2]{ScheherazadeNew-Bold} 
+\newfontfamily\secondfont[Script=Arabic,Scale=1.5]{B Titr}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=black,
+    citecolor=black,
+    pdfborder={0 0 0}
+}
+
+\def\baselinestretch{1.5}
+
+\renewcommand{\normalsize}{\fontsize{14}{16.8}\selectfont}
+
+\setlength{\parindent}{1.5em}
+
+\title{\textbf{کاربرد بینایی کامپیوتر در تشخیص خودکار بیماری‌ها}}
+\author{سینا مظفری راد}
+\date{خرداد ۱۴۰۳}
+
+\addbibresource{ref/FinalArticle/FinalArticle.bib} 
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+    \pagenumbering{gobble}
+    \centering
+    \textarab[fullvoc]{بِسْمِ اللَّـهِ الرَّحْمَـٰنِ الرَّحِيمِ}\par
+    \vspace{3cm}
+    \includegraphics[width=0.3\textwidth]{kashanu.jpeg}\par
+    \normalsize\textbf{دانشکده مهندسی برق و کامپیوتر}\par
+    \vspace{1cm}
+    {\secondfont\large\textbf{کاربرد بینایی کامپیوتر در تشخیص خودکار بیماری‌ها}\par}
+    \vspace{0.5cm}
+    {\latin\Large\textit{Computer Vision Applications in Automated Disease Diagnosis}\par}
+    \Large\textbf{ گردآورنده: سینا مظفری راد \hspace{3cm} شماره دانشجویی: 40021160214 }\par
+    \vspace{1cm}
+    \large\textbf{گزارش نهایی درس روش پژوهش}\par
+    \large\textbf{مهندس یوسفان}\par
+    \large\textbf{خرداد ۱۴۰۳}\par
+\end{titlepage}
+
+\section*{\textbf{چکیده}}
+این نوشتار، ساختار پایگاه داده \lr{Dunnhumby} را که از خرده‌فروشی انگلستان گردآوری شده بررسی می‌کند. ابتدا به تفصیل جداول کلیدی مانند \lr{transactions.csv}، \lr{products.csv}، \lr{households.csv} و \lr{casual_data.csv} پرداخته می‌شود. سپس برخی کاربردهای پژوهشی این داده‌ها در زمینهٔ تحلیل سبد خرید (\lr{Market Basket Analysis})، خوشه‌بندی مشتری (\lr{Customer Segmentation})، مدل‌سازی پیش‌بینی (\lr{Predictive Modeling}) و ارزیابی کمپین‌های بازاریابی (\lr{Campaign Effectiveness}) مطرح می‌گردد. ضمن اشاره به مزایا و چالش‌های پژوهشی، چشم‌انداز استفاده از دیتاست \lr{Dunnhumby} در تحلیل رفتار مصرف‌کننده و توسعهٔ راهکارهای داده‌محور در خرده‌فروشی ارائه خواهد شد.
+
+\noindent\textbf{واژگان کلیدی:} \lr{Dunnhumby}، خرده‌فروشی، تحلیل سبد خرید، خوشه‌بندی مشتریان، مدل‌سازی پیش‌بینی، داده‌کاوی
+
+\newpage
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+\section{\textbf{مقدمه}}
+\indent دیتاست \lr{Dunnhumby} یکی از مراجع اساسی برای پژوهشگران حوزهٔ خرده‌فروشی است. این پایگاه داده، داده‌های مرتبط با تراکنش‌های مشتریان، ویژگی‌های دموگرافیک خانوارها و اطلاعات محصولات را به‌صورت جامع ارائه می‌کند. تحلیل چنین اطلاعاتی می‌تواند الگوهای پنهان در رفتار مصرف‌کنندگان را آشکار سازد و در مدیریت ارتباط با مشتری، بهینه‌سازی سبد خرید و بهبود راهبردهای بازاریابی سودمند باشد.
+
+\section{\textbf{ساختار پایگاه داده و جداول کلیدی}}
+\noindent در ادامه، فایل‌های اصلی این دیتاست همراه با ستون‌های مهم هر یک معرفی می‌شود.
+
+\subsection{\textbf{جدول \lr{transactions.csv}}}
+\noindent \textbf{تعریف و عملکرد:} شامل سوابق خرید مشتریان، از جمله زمان و مقدار خرید هر محصول.
+
+\noindent ستون‌های اصلی:
+\begin{itemize}
+  \item \lr{household_key}: شناسهٔ خانوار
+  \item \lr{BASKET_ID}: شناسهٔ یکتا برای سبد خرید
+  \item \lr{DAY}: شمارهٔ روز یا تاریخ خرید
+  \item \lr{PRODUCT_ID}: شناسهٔ محصول خریداری‌شده
+  \item \lr{QUANTITY}: تعداد کالا در هر تراکنش
+  \item \lr{SALES_VALUE}: مبلغ پرداختی
+  \item \lr{STORE_ID}: کد فروشگاه
+  \item \lr{RETAIL_DISC}: تخفیف فروشگاهی
+  \item \lr{COUPON_DISC}: تخفیف کوپنی
+  \item \lr{COUPON_MATCH_DISC}: تخفیف اضافی مرتبط با انطباق کوپن
+  \item \lr{TRANS_TIME}: زمان تراکنش
+  \item \lr{WEEK_NO}: شمارهٔ هفته
+  \item \lr{YEAR}: سال
+\end{itemize}
+
+\subsection{\textbf{جدول \lr{products.csv}}}
+\noindent \textbf{تعریف و عملکرد:} توصیف ویژگی‌های محصولات، شامل نام تجاری و گروه کالایی.
+
+\noindent ستون‌های اصلی:
+\begin{itemize}
+  \item \lr{PRODUCT_ID}: شناسهٔ محصول
+  \item \lr{MANUFACTURER}: سازنده یا تولیدکننده
+  \item \lr{DEPARTMENT}: دپارتمان کالا (مثلاً نوشیدنی‌ها)
+  \item \lr{BRAND}: برند کالا
+  \item \lr{COMMODITY_DESC}: توصیف کلی محصول
+  \item \lr{SUB_COMMODITY_DESC}: زیرگروه کالایی
+  \item \lr{CURR_SIZE_OF_PRODUCT}: اندازه یا حجم بسته‌بندی
+\end{itemize}
+
+\subsection{\textbf{جدول \lr{households.csv} یا \lr{hh_demographic.csv}}}
+\noindent \textbf{تعریف و عملکرد:} ارائهٔ اطلاعات دموگرافیک خانوار که برای مطالعهٔ الگوهای خرید بر پایهٔ سن، درآمد و ساختار خانوار کاربرد دارد.
+
+\noindent ستون‌های اصلی:
+\begin{itemize}
+  \item \lr{household_key}: شناسهٔ خانوار
+  \item \lr{AGE_DESC} یا \lr{age_band}: گروه سنی
+  \item \lr{MARITAL_STATUS_CODE} یا \lr{marital_status}: وضعیت تأهل
+  \item \lr{INCOME_DESC} یا \lr{income_band}: محدودهٔ درآمد
+  \item \lr{HOMEOWNER_DESC} یا \lr{home_ownership}: نوع مالکیت خانه
+  \item \lr{HH_COMP_DESC}: ساختار خانوار (با فرزند یا بدون فرزند)
+  \item \lr{HOUSEHOLD_SIZE_DESC} یا \lr{household_size}: تعداد اعضای خانوار
+  \item \lr{KID_CATEGORY_DESC}: اطلاعات فرزندان
+\end{itemize}
+
+\subsection{\textbf{جدول \lr{casual_data.csv}}}
+\noindent \textbf{تعریف و عملکرد:} در برخی نسخه‌های \lr{Dunnhumby}، این فایل حاوی اطلاعات چیدمان محصول (\lr{display}) و تبلیغات پستی (\lr{mailer}) است.
+
+\noindent ستون‌های اصلی:
+\begin{itemize}
+  \item \lr{PRODUCT_ID}: شناسهٔ محصول
+  \item \lr{STORE_ID}: کد فروشگاه
+  \item \lr{WEEK_NO}: شمارهٔ هفته
+  \item \lr{display}: نحوهٔ نمایش محصول
+  \item \lr{mailer}: درج یا عدم درج در نامهٔ تبلیغاتی
+\end{itemize}
+
+\subsection{\textbf{جداول جانبی (\lr{campaigns}, \lr{coupon}, \lr{coupon_redemptions}, \lr{campaign_descriptions})}}
+\noindent این جداول برای درک بهتر فرآیندهای بازاریابی و ارائهٔ کوپن در \lr{Dunnhumby} به‌کار می‌روند. برای مثال، \lr{coupon.csv} محصولاتی را مشخص می‌کند که تحت تخفیف قرار می‌گیرند و \lr{coupon_redemptions.csv} نشان می‌دهد این کوپن‌ها در چه تراکنش‌هایی به‌کار رفته‌اند.
+
+\section{\textbf{کاربردهای پیشرفته در داده‌کاوی}}
+\subsection{\textbf{تحلیل سبد خرید (\lr{Market Basket Analysis})}}
+\noindent با تحلیل جداول \lr{transactions} و \lr{products}، می‌توان الگوهای هم‌خریدی محصولات را کشف کرد. الگوریتم‌های \lr{Apriori} یا \lr{FP-Growth} در طراحی چیدمان فروشگاه و پیشنهاد محصولات مکمل مفید هستند.
+
+\subsection{\textbf{مدل‌سازی پیش‌بینی (\lr{Predictive Modeling})}}
+\noindent ادغام داده‌های \lr{households} و \lr{transactions} امکان پیش‌بینی رفتار مشتری (مثلاً \lr{Churn}) و ارزیابی اثربخشی کمپین‌های تخفیفی را مهیا می‌کند. الگوریتم‌هایی نظیر رگرسیون لجستیک یا \lr{Random Forest} قابل استفاده‌اند.
+
+\subsection{\textbf{خوشه‌بندی مشتریان (\lr{Customer Segmentation})}}
+\noindent روش‌های نظارت‌نشده مانند \lr{K-means} برای گروه‌بندی خانوارها بر اساس ویژگی‌هایی چون میانگین خرید، درآمد و ساختار خانوار به‌کار می‌روند.
+
+\subsection{\textbf{تحلیل سری زمانی (\lr{Time Series Analysis})}}
+\noindent ستون‌های زمانی \lr{DAY}، \lr{WEEK_NO} و \lr{YEAR} در جدول \lr{transactions}، امکان بررسی الگوهای فصلی یا پیش‌بینی فروش را فراهم می‌کنند.
+
+\subsection{\textbf{ارزیابی کمپین‌ها (\lr{Campaign Effectiveness})}}
+\noindent تلفیق جداول مربوط به کمپین‌ها و کوپن‌ها با \lr{transactions} برای سنجش میزان موفقیت هر کمپین و تأثیر آن بر رفتار خرید مشتری کاربرد دارد.
+
+\section{\textbf{مزایا و چالش‌های پژوهشی}}
+\noindent \textbf{مزایا:}
+\begin{itemize}
+  \item تنوع داده‌ها از سطح تراکنش تا اطلاعات خانوار
+  \item واقع‌گرایی بالا در بازتاب رفتار مصرف‌کننده
+  \item ابعاد وسیع و مناسب برای تحلیل‌های \lr{Big Data}
+  \item کاربرد همه‌جانبه در تحلیل سبد خرید، وفاداری و ارزش طول عمر مشتری
+\end{itemize}
+
+\noindent \textbf{چالش‌ها:}
+\begin{itemize}
+  \item نیاز به زیرساخت مناسب جهت مدیریت حجم انبوه داده
+  \item ناهمگونی جداول و لزوم پاک‌سازی و ادغام داده‌ها
+  \item رعایت حریم خصوصی مشتریان و ملاحظات محرمانگی
+  \item پیچیدگی مدل‌سازی و نیاز به دانش عمیق در یادگیری ماشین
+\end{itemize}
+
+\section{\textbf{جمع‌بندی}}
+\noindent دیتاست \lr{Dunnhumby} با ارائهٔ داده‌های تراکنش، مشخصات محصول و ویژگی‌های خانوارها، بستری منحصربه‌فرد برای پژوهش‌های خرده‌فروشی فراهم می‌آورد. کاربردهایی نظیر تحلیل سبد خرید، خوشه‌بندی مشتریان و مدل‌های پیش‌بینی، بسته به اهداف پژوهش، از این پایگاه داده بهره می‌برند. با وجود چالش‌هایی چون حجم عظیم داده و لزوم رعایت حریم خصوصی، استفادهٔ مناسب از \lr{Dunnhumby} می‌تواند منجر به بهبود سیاست‌های بازاریابی و افزایش رضایتمندی مصرف‌کنندگان شود.
+
+\end{document}

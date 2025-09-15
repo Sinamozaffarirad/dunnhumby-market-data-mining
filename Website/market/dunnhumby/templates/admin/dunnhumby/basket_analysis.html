@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="head">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"Django administration" }}</a>
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h2>Shopping Basket Analysis Dashboard</h2>
+    
+    <div class="results">
+        <h3 class="section-title">Top 20 Baskets by Value</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Basket ID</th>
+                    <th>Total Items</th>
+                    <th>Total Value ($)</th>
+                    <th>Unique Products</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for basket in basket_stats %}
+                <tr>
+                    <td>{{ basket.basket_id }}</td>
+                    <td>{{ basket.total_items }}</td>
+                    <td>${{ basket.total_value|floatformat:2 }}</td>
+                    <td>{{ basket.unique_products }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No basket data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="results">
+        <h3 class="section-title">Top 10 Products by Sales</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Total Sales ($)</th>
+                    <th>Total Transactions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in dept_analysis %}
+                <tr>
+                    <td>{{ product.product_id }}</td>
+                    <td>${{ product.total_sales|floatformat:2 }}</td>
+                    <td>{{ product.total_transactions }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No product data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="results">
+        <h3 class="section-title">Top 20 Products by Frequency</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Purchase Frequency</th>
+                    <th>Total Sales ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in top_products %}
+                <tr>
+                    <td>{{ product.product_id }}</td>
+                    <td>{{ product.frequency }}</td>
+                    <td>${{ product.total_sales|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No product frequency data available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

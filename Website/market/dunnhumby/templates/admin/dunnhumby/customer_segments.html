@@ -1,0 +1,105 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block branding %}
+<h1 id="head">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"Django administration" }}</a>
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h2>Customer Segmentation Dashboard</h2>
+    
+    <div class="results">
+        <h3 class="section-title">RFM Segments Overview</h3>
+        {% if segments %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Segment</th>
+                    <th>Customer Count</th>
+                    <th>Avg. Spend ($)</th>
+                    <th>Avg. Transactions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for segment in segments %}
+                <tr>
+                    <td><strong>{{ segment.rfm_segment }}</strong></td>
+                    <td>{{ segment.count }}</td>
+                    <td>${{ segment.avg_spend|floatformat:2 }}</td>
+                    <td>{{ segment.avg_transactions|floatformat:1 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No customer segments available. Generate segments using the Data Manipulation panel.</p>
+        {% endif %}
+    </div>
+
+    <div class="results">
+        <h3 class="section-title">Recent Customer Analysis</h3>
+        {% if recent_customers %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Household</th>
+                    <th>Segment</th>
+                    <th>R-F-M Scores</th>
+                    <th>Total Spend</th>
+                    <th>Total Transactions</th>
+                    <th>Avg. Basket</th>
+                    <th>Last Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in recent_customers %}
+                <tr>
+                    <td>{{ customer.household_key }}</td>
+                    <td><span class="pill success">{{ customer.rfm_segment }}</span></td>
+                    <td>{{ customer.recency_score }}-{{ customer.frequency_score }}-{{ customer.monetary_score }}</td>
+                    <td>${{ customer.total_spend|floatformat:2 }}</td>
+                    <td>{{ customer.total_transactions }}</td>
+                    <td>${{ customer.avg_basket_value|floatformat:2 }}</td>
+                    <td>{{ customer.updated_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No customer data available.</p>
+        {% endif %}
+    </div>
+
+    <div class="help">
+        <h3 class="section-title">RFM Segmentation Guide</h3>
+        <div class="segment-explanations">
+            <div class="segment-item">
+                <strong>Champions:</strong> High recency, frequency, and monetary scores. Your best customers.
+            </div>
+            <div class="segment-item">
+                <strong>Loyal Customers:</strong> High frequency and monetary, moderate recency. Regular valuable customers.
+            </div>
+            <div class="segment-item">
+                <strong>New Customers:</strong> High recency, lower frequency/monetary. Recently acquired customers.
+            </div>
+            <div class="segment-item">
+                <strong>Big Spenders:</strong> High monetary, variable recency/frequency. Focus on retention.
+            </div>
+            <div class="segment-item">
+                <strong>Regular Customers:</strong> High frequency, variable other scores. Consistent shoppers.
+            </div>
+            <div class="segment-item">
+                <strong>At Risk:</strong> Low recency. Customers who haven't shopped recently.
+            </div>
+            <div class="segment-item">
+                <strong>Standard:</strong> Average scores across all dimensions. Typical customers.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
