@@ -230,7 +230,7 @@ fonts/
 *.ttf
 *.otf
 DataBase*/
-market/
+# market/
 .dist/
 GIT*TOKEN*/
 package.json
