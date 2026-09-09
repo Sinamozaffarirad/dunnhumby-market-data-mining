@@ -5,6 +5,44 @@
   const MAX_CHART_PIXEL_RATIO = 3;
   let appliedPixelRatio = 0;
   let refreshTimer = null;
+  let pointerPluginRegistered = false;
+
+  // CSS zoom and stretched canvases can put native offsetX/offsetY in a
+  // different coordinate space from Chart.js. Map viewport coordinates through
+  // the rendered content box so hover, tooltips, legends and clicks agree.
+  const chartPointerPosition = {
+    id: 'chartPointerPosition',
+    beforeEvent(chart, args) {
+      const event = args.event;
+      const native = event.native;
+      if (!native || event.type === 'mouseout') return;
+      const pointer = native.touches?.[0] || native.changedTouches?.[0] || native;
+      if (!Number.isFinite(pointer.clientX) || !Number.isFinite(pointer.clientY)) return;
+
+      const canvas = chart.canvas;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const style = getComputedStyle(canvas);
+      const px = name => parseFloat(style[name]) || 0;
+      const left = px('borderLeftWidth') + px('paddingLeft');
+      const right = px('borderRightWidth') + px('paddingRight');
+      const top = px('borderTopWidth') + px('paddingTop');
+      const bottom = px('borderBottomWidth') + px('paddingBottom');
+      const borderBox = style.boxSizing === 'border-box';
+      const width = px('width') + (borderBox ? 0 : left + right);
+      const height = px('height') + (borderBox ? 0 : top + bottom);
+      const contentWidth = width - left - right;
+      const contentHeight = height - top - bottom;
+      if (contentWidth <= 0 || contentHeight <= 0) return;
+
+      event.x = ((pointer.clientX - rect.left) * width / rect.width - left)
+        * chart.width / contentWidth;
+      event.y = ((pointer.clientY - rect.top) * height / rect.height - top)
+        * chart.height / contentHeight;
+      // Chart.js calculates this flag before calling beforeEvent.
+      args.inChartArea = chart.isPointInArea(event);
+    }
+  };
 
   window.chartRenderPixelRatio = function chartRenderPixelRatio() {
     const displayRatio = Number(window.devicePixelRatio || 1);
@@ -22,6 +60,10 @@
 
   function applyChartQuality(force) {
     if (!window.Chart) return false;
+    if (!pointerPluginRegistered) {
+      Chart.register(chartPointerPosition);
+      pointerPluginRegistered = true;
+    }
     const pixelRatio = window.chartRenderPixelRatio();
     Chart.defaults.devicePixelRatio = pixelRatio;
     Chart.defaults.responsive = true;
