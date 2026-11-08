@@ -3,7 +3,13 @@
 Bachelor's final project in Computer Engineering, Department of Computer Engineering, Faculty of
 Electrical and Computer Engineering, University of Kashan. Supervised by Dr. Vahidipour, September 2026.
 
-**Authors:** Sina Mozaffari Rad, Fatemeh Sadat Dastyafteh, Samaneh Tabandeh
+**Developers:**
+
+| Name | Student ID | GitHub |
+|---|---|---|
+| Sina Mozaffari Rad | 40021160214 | [@Sinamozaffarirad](https://github.com/Sinamozaffarirad) |
+| Fatemeh Sadat Dastyafteh | 40021160014 | [@fatemehdsf82](https://github.com/fatemehdsf82) |
+| Samaneh Tabandeh | 40021160009 | [@sm2003t](https://github.com/sm2003t) |
 
 **Full report (in Persian, 221 pages):** [`report/Project_Report.pdf`](report/Project_Report.pdf)
 
@@ -302,5 +308,5 @@ chapters:
 
 ## Acknowledgements
 
-We thank Dr. Vahidipour for his supervision; his questions and practical suggestions shaped the design
+We thank Dr. Vahidipour for supervising the project; the questions and practical suggestions we received shaped the design
 and evaluation of the system. The dataset is provided by Dunnhumby under its own terms of use.
