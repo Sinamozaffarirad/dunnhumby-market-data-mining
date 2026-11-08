@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this project or its report, please cite it as below."
+type: software
+title: "Analysis and Design of a Smart Physical Retail Store Using the Dunnhumby Dataset"
+abstract: >-
+  Bachelor's final project in Computer Engineering at the University of Kashan.
+  A Django and SQL Server decision-support system for a physical retail store,
+  built on the Dunnhumby The Complete Journey dataset: association rules,
+  repurchase prediction, product revenue forecasting, a business intelligence
+  dashboard with statistical group comparisons, RFM segmentation, churn
+  prediction, retention prioritisation and a hybrid product recommender.
+authors:
+  - family-names: "Mozaffari Rad"
+    given-names: "Sina"
+  - family-names: "Dastyafteh"
+    given-names: "Fatemeh Sadat"
+  - family-names: "Tabandeh"
+    given-names: "Samaneh"
+date-released: 2026-09-14
+version: 1.0.0
+repository-code: "https://github.com/Sinamozaffarirad/dunnhumby-market-data-mining"
+keywords:
+  - market basket analysis
+  - association rules
+  - churn prediction
+  - recommender system
+  - time series forecasting
+  - business intelligence
+  - Dunnhumby
