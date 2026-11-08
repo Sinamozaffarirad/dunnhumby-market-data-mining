@@ -12,7 +12,9 @@ POWER_BI_EMBED_URL = os.getenv(
 ).strip()
 
 
-SECRET_KEY = "django-insecure--7&=%p1gosrs=_zv(+immez89e$w*@x1lb&9rad&s_ym*qur0&"
+from django.core.management.utils import get_random_secret_key
+
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or get_random_secret_key()
 
 
 DEBUG = True
