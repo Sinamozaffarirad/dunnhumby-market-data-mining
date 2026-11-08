@@ -44,6 +44,7 @@ to what each result can and cannot be used for.
 - [Running the project](#running-the-project)
 - [Limitations](#limitations)
 - [Report structure](#report-structure)
+- [License](#license)
 
 ## Dataset
 
@@ -305,6 +306,12 @@ chapters:
 8. Analytical dashboard, churn analysis and retention prioritisation
 9. Recommender systems and customer pages
 10. Conclusions and future work
+
+## License
+
+The source code is released under the [MIT License](LICENSE). The project report in `report/` and the
+screenshots in `docs/` remain the copyright of the developers; please cite the project when using them.
+The Dunnhumby dataset is not part of this repository and is subject to Dunnhumby's own terms of use.
 
 ## Acknowledgements
 
