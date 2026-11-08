@@ -10,7 +10,6 @@ recommendations, product revenue forecasting, and a business intelligence dashbo
 - `Website/market/ml_models_cache/`: saved models and recommendation matrices.
 - `database/`: a full backup of the `marketdb` database, taken from the live
   database on 8 September 2026 and verified with `RESTORE VERIFYONLY`.
-- `dashboardMarket.pbix`: Power BI report.
 - `report/Project_Report.docx` and `report/Project_Report.pdf`: final written report.
 
 ## Local setup on Windows

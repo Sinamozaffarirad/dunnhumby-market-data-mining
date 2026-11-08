@@ -1,3 +1,0 @@
-
-=== starting the site ===
-the site did not start; check SQL Server is running

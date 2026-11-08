@@ -252,3 +252,9 @@ text of conversation about what project needs from me and proffesor.txt
 
 
 tools/ngrok.yml
+
+# Local demo secret and tunnel logs
+.demo_secret_key
+tools/*.exe
+tools/*.err
+tools/*.txt
