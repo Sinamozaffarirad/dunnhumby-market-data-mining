@@ -258,3 +258,4 @@ tools/ngrok.yml
 tools/*.exe
 tools/*.err
 tools/*.txt
+*.backup
