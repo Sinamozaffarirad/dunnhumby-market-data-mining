@@ -67,8 +67,7 @@ Open `http://127.0.0.1:8000/analysis/`. The main pages are:
 
 The styles and charts use external CDN libraries, so the browser needs internet
 access. The embedded Power BI report also needs access to its configured workspace.
-Override `POWER_BI_EMBED_URL` for another published report. Opening the PBIX file
-separately requires Power BI Desktop and may require reconnecting its data source.
+Override `POWER_BI_EMBED_URL` for another published report.
 
 This configuration is for a local demonstration. `DJANGO_DEBUG` defaults to `1`;
 `DJANGO_ALLOWED_HOSTS` defaults to loopback hosts. Server deployment requires its

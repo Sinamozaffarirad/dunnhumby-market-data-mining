@@ -219,7 +219,7 @@ All screenshots are from the running system and are also used in the report.
 - **Data and models:** pandas, NumPy, SciPy, scikit-learn, XGBoost. Trained models are versioned and
   cached in `ml_models_cache/` so that results can be reused without retraining.
 - **Front end:** Django templates, Bootstrap 5, Chart.js.
-- **Reporting:** a Power BI report (`dashboardMarket.pbix`) that can be embedded in the system.
+- **Reporting:** a published Power BI report embedded in the system through its URL (`POWER_BI_EMBED_URL`).
 - **Access control:** all analysis pages require login; settings such as the secret key, debug mode and
   database connection are read from environment variables in the final version.
 
@@ -240,7 +240,6 @@ Website/market/              Development copy of the Django project
   templates/, static/        Shared templates and assets
 report/Project_Report.pdf    Final project report (Persian)
 docs/screenshots/            Images used in this README
-dashboardMarket.pbix         Power BI report
 start_demo.ps1               Starts the site for a local demonstration
 tests/                       Front-end chart interaction checks
 ```
