@@ -217,31 +217,32 @@ All screenshots are from the running system and are also used in the report.
 - **Back end:** Python, Django 5.2, SQL Server through `mssql-django` and `pyodbc`. Large dataset tables
   are unmanaged Django models queried with optimised SQL.
 - **Data and models:** pandas, NumPy, SciPy, scikit-learn, XGBoost. Trained models are versioned and
-  cached in `ml_models_cache/` so that results can be reused without retraining.
+  cached in `webapp/ml_models_cache/` so that results can be reused without retraining.
 - **Front end:** Django templates, Bootstrap 5, Chart.js.
 - **Reporting:** a published Power BI report embedded in the system through its URL (`POWER_BI_EMBED_URL`).
 - **Access control:** all analysis pages require login; settings such as the secret key, debug mode and
-  database connection are read from environment variables in the final version.
+  database connection are read from environment variables.
 
 ## Repository layout
 
 ```
-Project_Clean/               Final version of the system, as submitted
-  Website/market/            Django project (settings use environment variables)
-  README.md                  Detailed setup notes for the final version
-Website/market/              Development copy of the Django project
+webapp/                      Django project
+  manage.py
+  market/                    Project settings and URL configuration
   core/                      Home page and shared models
-  dunnhumby/                 Basket analysis, rules, forecasting, BI dashboard, churn
+  dunnhumby/                 Basket analysis, association rules, forecasting, BI dashboard, churn
   customers/                 Customer search, profile, purchases, recommender model
   customer_retention/        Retention prioritisation
   product_recommender/       Product-to-customer recommendations
   catalog/                   Product catalogue
-  ml_models_cache/           Saved models and metrics
+  ml_models_cache/           Trained models loaded by the pages
   templates/, static/        Shared templates and assets
 report/Project_Report.pdf    Final project report (Persian)
+docs/SETUP.md                Detailed setup, configuration and maintenance commands
 docs/screenshots/            Images used in this README
-start_demo.ps1               Starts the site for a local demonstration
-tests/                       Front-end chart interaction checks
+scripts/                     Demonstration scripts (local server with an optional public tunnel)
+tests/chart_hover/           Front-end check for chart hover behaviour
+requirements.txt             Python dependencies
 ```
 
 ## Running the project
@@ -260,22 +261,13 @@ Server database named `marketdb` (or restore a backup of it), then configure and
 $env:DJANGO_SECRET_KEY = & .\.venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 $env:DB_HOST = 'localhost'
 $env:DB_NAME = 'marketdb'
-$env:DB_DRIVER = 'ODBC Driver 17 for SQL Server'
-cd Project_Clean\Website\market
-..\..\..\.venv\Scripts\python.exe manage.py migrate
-..\..\..\.venv\Scripts\python.exe manage.py createsuperuser
-..\..\..\.venv\Scripts\python.exe manage.py runserver
+.\.venv\Scripts\python.exe webapp\manage.py migrate
+.\.venv\Scripts\python.exe webapp\manage.py createsuperuser
+.\.venv\Scripts\python.exe webapp\manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000/analysis/` and log in. The model tests run without a database:
-
-```powershell
-..\..\..\.venv\Scripts\python.exe manage.py test dunnhumby
-```
-
-`start_demo.ps1` starts the same site with debug mode off; it expects `cloudflared.exe` in `tools/`
-for an optional public tunnel, which is not included in the repository. More detail is in
-[`Project_Clean/README.md`](Project_Clean/README.md).
+Open `http://127.0.0.1:8000/analysis/` and log in. The full guide, including the model cache, tests and
+demonstration scripts, is in [`docs/SETUP.md`](docs/SETUP.md).
 
 ## Limitations
 

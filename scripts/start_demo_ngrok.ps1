@@ -1,5 +1,5 @@
 param(
-    [string]$Domain = "composed-underline-panama.ngrok-free.dev"
+    [string]$Domain = ""
 )
 
 # Serves the site on a fixed public address through ngrok.
@@ -10,9 +10,9 @@ param(
 # dashboard, then pass it to this script or set NGROK_DOMAIN.
 
 $ErrorActionPreference = 'Stop'
-$root    = 'C:\UNI\BA Final Project'
-$project = Join-Path $root 'Project_Clean\Website\market'
-$python  = 'C:\Users\sinam\AppData\Local\Python\pythoncore-3.14-64\python.exe'
+$root    = Split-Path -Parent $PSScriptRoot
+$project = Join-Path $root 'webapp'
+$python  = Join-Path $root '.venv\Scripts\python.exe'
 $ngrok   = Join-Path $root 'tools\ngrok.exe'
 # The credential lives beside the script rather than under LOCALAPPDATA, whose
 # contents are not visible from every shell on this machine. Kept out of git by
@@ -23,7 +23,7 @@ $port    = 8000
 if (-not $Domain) { $Domain = $env:NGROK_DOMAIN }
 if (-not $Domain) {
     Write-Host 'No domain given.' -ForegroundColor Red
-    Write-Host 'Run:  .\start_demo_ngrok.ps1 -Domain your-name.ngrok-free.app'
+    Write-Host 'Run:  .\scripts\start_demo_ngrok.ps1 -Domain your-name.ngrok-free.app'
     exit 1
 }
 
@@ -66,7 +66,7 @@ Start-Sleep -Seconds 2
 Write-Host ''
 Write-Host '=== starting the site ===' -ForegroundColor Cyan
 $server = Start-Process -FilePath $python `
-    -ArgumentList "`"$(Join-Path $root 'tools\serve.py')`"","`"$project`"","$port" `
+    -ArgumentList "`"$(Join-Path $PSScriptRoot 'serve.py')`"","`"$project`"","$port" `
     -WorkingDirectory $project -PassThru -WindowStyle Minimized
 
 Write-Host 'waiting for it to load (this takes up to a minute)...' -NoNewline

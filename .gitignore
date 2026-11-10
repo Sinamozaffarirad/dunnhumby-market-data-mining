@@ -259,3 +259,7 @@ tools/*.exe
 tools/*.err
 tools/*.txt
 *.backup
+
+# Local tunnel programs and database backups
+tools/
+database/*.bak

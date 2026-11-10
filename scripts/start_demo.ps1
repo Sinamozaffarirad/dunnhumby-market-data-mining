@@ -9,9 +9,9 @@
 # ---------------------------------------------------------------------------
 
 $ErrorActionPreference = 'Stop'
-$root       = 'C:\UNI\BA Final Project'
-$project    = Join-Path $root 'Project_Clean\Website\market'
-$python     = 'C:\Users\sinam\AppData\Local\Python\pythoncore-3.14-64\python.exe'
+$root       = Split-Path -Parent $PSScriptRoot
+$project    = Join-Path $root 'webapp'
+$python     = Join-Path $root '.venv\Scripts\python.exe'
 $cloudflared= Join-Path $root 'tools\cloudflared.exe'
 $port       = 8000
 
