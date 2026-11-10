@@ -315,5 +315,4 @@ The Dunnhumby dataset is not part of this repository and is subject to Dunnhumby
 
 ## Acknowledgements
 
-We thank Dr. Vahidipour for supervising the project; the questions and practical suggestions we received shaped the design
-and evaluation of the system. The dataset is provided by Dunnhumby under its own terms of use.
+The dataset is provided by Dunnhumby under its own terms of use.
