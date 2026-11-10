@@ -263,3 +263,4 @@ tools/*.txt
 # Local tunnel programs and database backups
 tools/
 database/*.bak
+!report/Project_Report.pdf
