@@ -306,4 +306,4 @@ The Dunnhumby dataset is not part of this repository and is subject to Dunnhumby
 
 ## Acknowledgements
 
-The dataset is provided by Dunnhumby under its own terms of use.
+The dataset is provided by Dunnhumby and is subject to its own terms of use.
